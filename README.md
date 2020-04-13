@@ -1,2 +1,2 @@
-# BetterLoadingScreen_1.7
-1.7.10 port of better loading screen. This does not require AlexIILLib, nor does it contain all the features that the 1.8 version does. HOWEVER, this does still do the basics
+# BetterLoadingScreen_1.7 GT:NH
+This is a fork of Alexiil's 1.7.10 Custom Loading Screen mod. This one has integrations with Gregtech and shouldn't be used outside the pack, as, for instance, the screen layout is hardcoded.
