@@ -36,6 +36,7 @@ public class LoadingFrame extends JFrame {
 
         @Override
         public void run() {
+        	System.out.println("testttt");
             while (timeLeft > 0 && shouldIncrement.get()) {
                 try {
                     Thread.sleep(250);
@@ -58,6 +59,7 @@ public class LoadingFrame extends JFrame {
     private JPanel contentPane;
     private JLabel lblState;
     private JProgressBar progressBar;
+    private JProgressBar GTprogressBar;
     private ThreadIncrementer incrementer;
 
     public static void setSystemLAF() {
@@ -113,8 +115,11 @@ public class LoadingFrame extends JFrame {
         panel_1.setLayout(new BorderLayout(0, 0));
 
         progressBar = new JProgressBar();
+        GTprogressBar = new JProgressBar();
         progressBar.setStringPainted(true);
+        GTprogressBar.setStringPainted(true);
         panel_1.add(progressBar, BorderLayout.NORTH);
+        panel_1.add(GTprogressBar, BorderLayout.NORTH);
     }
 
     public void setMessage(String message) {
@@ -123,6 +128,7 @@ public class LoadingFrame extends JFrame {
 
     public void setProgress(double percent) {
         progressBar.setValue((int) percent);
+        GTprogressBar.setValue((int) percent);
     }
 
     public void setProgressIncrementing(float from, float to, long howLongFor) {

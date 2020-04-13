@@ -47,7 +47,10 @@ public class MinecraftDisplayer implements IDisplayer {
     private boolean callAgain = false;
     private IResourcePack myPack;
     private float clearRed = 1, clearGreen = 1, clearBlue = 1;
-
+    private boolean hasSaidNice = false;
+    float lastPercent = 0;
+    public static boolean isNice = false;
+    
     public static void playFinishedSound() {
         SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
         ResourceLocation location = new ResourceLocation(sound);
@@ -124,7 +127,7 @@ public class MinecraftDisplayer implements IDisplayer {
             configDir.mkdirs();
 
         // Image Config
-        images = new ImageRender[6];
+        images = new ImageRender[10];
         String progress = "betterloadingscreen:textures/progressBars.png";
         String title = "textures/gui/title/mojang.png";
         images[0] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
@@ -132,7 +135,15 @@ public class MinecraftDisplayer implements IDisplayer {
         images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "000000", null, "");
         images[3] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -50, 182, 5));
         images[4] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -50, 182, 5));
-        images[5] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+        
+        //GT
+        images[5] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -60, 0, 0), "000000", null, "");
+        images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -70, 0, 0), "000000", null, "");
+        images[7] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -80, 182, 5));
+        images[8] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -80, 182, 5));
+        //
+        
+        images[9] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
 
         if (!preview) {
             SplashScreen splashScreen = SplashScreen.getSplashScreen();
@@ -181,13 +192,154 @@ public class MinecraftDisplayer implements IDisplayer {
 
     @Override
     public void displayProgress(String text, float percent) {
+    	//questionable code
+    	//normal preset
+    	/*
+    	if (alexiil.mods.load.ModLoadingListener.isRegisteringGTmaterials) {
+    		images = new ImageRender[10];
+            String progress = "betterloadingscreen:textures/progressBars.png";
+            String title = "textures/gui/title/mojang.png";
+            images[0] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
+            
+            images[1] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -60, 0, 0), "000000", null, "");
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -70, 0, 0), "000000", null, "");
+          //these bars are actually the GT one
+            images[3] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 182, 5), new Area(0, -80, 182, 5));
+            images[4] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 5, 182, 5), new Area(0, -80, 182, 5));
+            
+            ///GT
+            images[5] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -30, 0, 0), "000000", null, "");
+            images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "000000", null, "");
+            //images[7] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -50, 182, 5));
+            //images[8] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -50, 182, 5));
+            //these bars are actually the main
+            images[7] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -50, 182, 5));
+            images[8] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -50, 182, 5));
+            
+            ///
+            
+            images[9] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+            //
+		}	else {
+			images = new ImageRender[6];
+            String progress = "betterloadingscreen:textures/progressBars.png";
+            String title = "textures/gui/title/mojang.png";
+            images[0] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
+            images[1] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -30, 0, 0), "000000", null, "");
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "000000", null, "");
+            images[3] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -50, 182, 5));
+            images[4] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -50, 182, 5));
+            images[5] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+		}*/
+    	//GTNH preset 1, works well. The bar for materials is purple 
+    	if (alexiil.mods.load.ModLoadingListener.isRegisteringGTmaterials) {
+    		images = new ImageRender[11];
+            String progress = "betterloadingscreen:textures/progressBars.png";
+            String GTprogress = "betterloadingscreen:textures/progressBar.png";
+            String title = "betterloadingscreen:textures/title.png";
+            String background = "betterloadingscreen:textures/background.png";
+            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
+            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 194, 110));
+            
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -70, 0, 0), "ffffff", null, "");
+            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -80, 0, 0), "ffffff", null, "");
+            //progressbars
+            images[4] = new ImageRender(GTprogress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
+            images[5] = new ImageRender(GTprogress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
+            
+            ///GT
+            images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -20, 0, 0), "ffffff", null, "");
+            images[7] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -30, 0, 0), "ffffff", null, "");
+            //progressbars
+            images[8] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -90, 182, 5));
+            images[9] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -90, 182, 5));
+            ///
+            
+            images[10] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+            //
+		}	else {
+			images = new ImageRender[7];
+            String progress = "betterloadingscreen:textures/progressBar.png";
+            String title = "betterloadingscreen:textures/title.png";
+            String background = "betterloadingscreen:textures/background.png";
+            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
+            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 194, 110));
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -20, 0, 0), "ffffff", null, "");
+            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -30, 0, 0), "ffffff", null, "");
+            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
+            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
+            images[6] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+		}
+    	//new materials loading texture and better spacing. Adding black text now.
+    	if (alexiil.mods.load.ModLoadingListener.isRegisteringGTmaterials) {
+    		images = new ImageRender[13];
+            String GTprogress = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
+            String progress = "betterloadingscreen:textures/progressBar.png";
+            String title = "betterloadingscreen:textures/title.png";
+            String background = "betterloadingscreen:textures/background.png";
+            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
+            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 194, 110));
+            //black text
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -70, 0, 0), "ffffff", null, "b");
+            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -80, 0, 0), "ffffff", null, "b");
+            //white text
+            images[4] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -70, 0, 0), "ffffff", null, "");
+            images[5] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -80, 0, 0), "ffffff", null, "");
+            //progressbars
+            images[6] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
+            images[7] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
+            
+            ///GT
+            images[8] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -20, 0, 0), "ffffff", null, "");
+            images[9] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -30, 0, 0), "ffffff", null, "");
+            //progressbars
+            images[10] = new ImageRender(GTprogress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 172, 12), new Area(0, -90, 172, 12));
+            images[11] = new ImageRender(GTprogress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 12, 172, 12), new Area(0, -90, 172, 12));
+            ///
+
+            images[12] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+            //
+		}	else {
+			images = new ImageRender[7];
+            String progress = "betterloadingscreen:textures/progressBar.png";
+            String title = "betterloadingscreen:textures/title.png";
+            String background = "betterloadingscreen:textures/background.png";
+            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
+            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 194, 110));
+            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -20, 0, 0), "ffffff", null, "");
+            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -30, 0, 0), "ffffff", null, "");
+            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
+            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
+            images[6] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
+		}
+    	
         resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 
         preDisplayScreen();
-
-        for (ImageRender image : images)
-            if (image != null)
+        
+        boolean usingGT = alexiil.mods.load.ModLoadingListener.isRegisteringGTmaterials;
+        int imageCounter = 0;
+        
+        if (!usingGT) {
+			lastPercent = percent;
+		}
+        for (ImageRender image : images) {
+//        	if (!usingGT) {
+//				lastPercent = percent;
+//			}
+            if (image != null && !(usingGT && imageCounter > 4 && usingGT && imageCounter < 9)) {
                 drawImageRender(image, text, percent);
+            } else if (image != null && usingGT && !isNice) {
+            	drawImageRender(image," Post Initialization: Registering Gregtech materials", lastPercent);
+			} else if (image != null && usingGT && isNice) {
+            	drawImageRender(image," Post Initialization: Registering nice Gregtech materials", lastPercent);
+            	if(!hasSaidNice) {
+            		hasSaidNice = true;
+            		System.out.println("Yeah, that's nice, funni number");
+            	}
+			}
+            imageCounter++;
+        }
 
         postDisplayScreen();
 
@@ -199,8 +351,9 @@ public class MinecraftDisplayer implements IDisplayer {
     }
 
     private FontRenderer fontRenderer(String fontTexture) {
-        if (fontRenderers.containsKey(fontTexture))
+        if (fontRenderers.containsKey(fontTexture)) {
             return fontRenderers.get(fontTexture);
+        }
         FontRenderer font = new FontRenderer(mc.gameSettings, new ResourceLocation(fontTexture), textureManager, false);
         font.onResourceManagerReload(mc.getResourceManager());
         if (!preview) {
