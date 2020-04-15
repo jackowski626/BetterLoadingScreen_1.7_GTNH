@@ -36,7 +36,6 @@ public class LoadingFrame extends JFrame {
 
         @Override
         public void run() {
-        	System.out.println("testttt");
             while (timeLeft > 0 && shouldIncrement.get()) {
                 try {
                     Thread.sleep(250);

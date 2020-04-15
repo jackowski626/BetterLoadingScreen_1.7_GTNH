@@ -15,9 +15,6 @@ import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
 public class ModLoadingListener {
-	//Gregtech stuff
-	public static boolean isRegisteringGTmaterials;
-	//
     public enum State {
         CONSTRUCT("construction"), PRE_INIT("pre_initialization"), LITE_LOADER_INIT("lite", true, true), INIT("initialization"), POST_INIT(
                 "post_initialization"), LOAD_COMPLETE("completed"), FINAL_LOADING("reloading_resource_packs", true, false);
@@ -99,6 +96,12 @@ public class ModLoadingListener {
             float percent = values * index / size;
             return part + percent;
         }
+        public float getPercent( ) {
+        	float values = 100 / (float) (State.values().length-1);
+            float size = listeners.size();
+            float percent = values * index / size;
+            return percent;
+        }
     }
 
     private static List<ModLoadingListener> listeners = new ArrayList<ModLoadingListener>();
@@ -107,7 +110,6 @@ public class ModLoadingListener {
     private final ModContainer mod;
 
     public ModLoadingListener(ModContainer mod) {
-    	isRegisteringGTmaterials = false;
         this.mod = mod;
         if (listeners.isEmpty())
             MinecraftForge.EVENT_BUS.register(this);

@@ -136,15 +136,17 @@ public class ProgressDisplayer {
                 return Lib.Mod.ID;
             }
         };
-
+        
+        //As in this fork I get rid of presets by having only one in main cfg, the cfg file goes in cfg root
         File fileOld = new File("./config/betterloadingscreen.cfg");
-        File fileNew = new File("./config/BetterLoadingScreen/config.cfg");
+        //File fileNew = new File("./config/BetterLoadingScreen/config.cfg");
 
-        if (fileOld.exists())
+        /*if (fileOld.exists())
             cfg = new Configuration(fileOld);
         else
-            cfg = new Configuration(fileNew);
-
+            cfg = new Configuration(fileNew);*/
+        cfg = new Configuration(fileOld);
+        
         boolean useMinecraft = isClient();
         if (useMinecraft) {
             String comment =
