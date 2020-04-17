@@ -1,5 +1,7 @@
 package alexiil.mods.load;
 
+import java.io.IOException;
+
 import com.mumfrey.liteloader.client.gui.startup.LoadingBar;
 
 public class LiteLoaderProgress extends LoadingBar {
@@ -23,16 +25,26 @@ public class LiteLoaderProgress extends LoadingBar {
     protected void _incLiteLoaderProgress(String arg0) {
         message = arg0;
         liteProgress++;
-        render();
+        try {
+			render();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     @Override
     protected void _incTotalLiteLoaderProgress(int arg0) {
         totalLiteProgress += arg0;
-        render();
+        try {
+			render();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
-    private void render() {
+    private void render() throws IOException {
         float litePercent = liteProgress / (float) totalLiteProgress;
         litePercent /= (float) NUM_STATES;
         float percent = LITE_LOADER_START_PERCENT + litePercent;

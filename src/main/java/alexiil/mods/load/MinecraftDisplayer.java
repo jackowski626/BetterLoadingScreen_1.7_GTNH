@@ -502,6 +502,7 @@ public class MinecraftDisplayer implements IDisplayer {
         int startY = render.transformY(resolution.getScaledHeight());
         int PWidth = 0;
         int PHeight = 0;
+        int intColor = Integer.parseInt(textColor, 16);
         if (render.position != null) {
             PWidth = render.position.width == 0 ? resolution.getScaledWidth() : render.position.width;
             PHeight = render.position.height == 0 ? resolution.getScaledHeight() : render.position.height;
@@ -522,7 +523,11 @@ public class MinecraftDisplayer implements IDisplayer {
                 int width = font.getStringWidth(percentage);
                 startX = render.positionType.transformX(render.position.x, resolution.getScaledWidth() - width);
                 startY = render.positionType.transformY(render.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
-                font.drawStringWithShadow(percentage, startX, startY, render.getColour());
+                if (textShadow) {
+                	font.drawStringWithShadow(percentage, startX, startY, /*render.getColour()*/intColor);
+				} else {
+					drawString(font, percentage, startX, startY, intColor);
+				}
                 break;
             }
             case DYNAMIC_TEXT_STATUS: {
@@ -536,7 +541,11 @@ public class MinecraftDisplayer implements IDisplayer {
                 	drawString(font, String.valueOf(text.charAt(i)), currentX, startY, render.getColour());
                 	currentX += font.getCharWidth(text.charAt(i));
                 }*/
-                font.drawStringWithShadow(text, startX, startY, render.getColour());
+                if (textShadow) {
+                	font.drawStringWithShadow(text, startX, startY, intColor);
+                } else {
+                	drawString(font, text, startX, startY, intColor);
+                }
                 break;
             }
             case STATIC_TEXT: {
@@ -544,8 +553,12 @@ public class MinecraftDisplayer implements IDisplayer {
                 int width = font.getStringWidth(render.text);
                 int startX1 = render.positionType.transformX(render.position.x, resolution.getScaledWidth() - width);
                 int startY1 = render.positionType.transformY(render.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
-                drawString(font, render.text, startX1, startY1, render.getColour());
-                break;
+                if (textShadow) {
+                	font.drawStringWithShadow(render.text, startX1, startY1, intColor);
+				} else {
+					drawString(font, render.text, startX1, startY1, intColor);
+				}
+				break;
             }
             case STATIC: {
                 ResourceLocation res = new ResourceLocation(render.resourceLocation);

@@ -1,21 +1,32 @@
 package alexiil.mods.load;
 
 import java.awt.GraphicsEnvironment;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import com.google.gson.Gson;
+
 import cpw.mods.fml.client.FMLFileResourcePack;
+import cpw.mods.fml.client.SplashProgress;
 import cpw.mods.fml.common.DummyModContainer;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.common.config.Configuration;
 
+
 public class ProgressDisplayer {
+	private static Logger log;
+	private static boolean hasTurnedSplashOff = false;
     public interface IDisplayer {
                 void open(Configuration cfg);
 
@@ -168,8 +179,41 @@ public class ProgressDisplayer {
         displayer.open(cfg);
         cfg.save();
     }
-
-    public static void displayProgress(String text, float percent) {
+    
+    public static void turnForgeSplashOff(String file) throws IOException {
+    	log = LogManager.getLogger("betterloadingscreen");
+    	BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            StringBuffer inputBuffer = new StringBuffer();
+            System.out.println("got the file");
+            String line;
+            while ((line = reader.readLine()) != null) {
+				//System.out.println(line);
+				if (line.equals("enabled=true")) {
+					line = "enabled=false";
+				}
+				inputBuffer.append(line);
+				inputBuffer.append('\n');
+            }
+            reader.close();
+            
+            FileOutputStream fileOut = new FileOutputStream(file);
+            fileOut.write(inputBuffer.toString().getBytes());
+            fileOut.close();
+            log.info("Turned Forge splash screen off in splash.properties");
+        }
+        catch (FileNotFoundException e) {
+            System.out.println("Eror opening splash.properties");
+        }
+    }
+    
+    public static void displayProgress(String text, float percent) throws IOException {
+    	if (!hasTurnedSplashOff) {
+    		String file = "./config/splash.properties";
+			hasTurnedSplashOff = true;
+			turnForgeSplashOff(file);
+		}
         if (!hasInitRL) {
             loadResourceLoader();
             overrideForgeSplashProgress();
@@ -218,7 +262,7 @@ public class ProgressDisplayer {
         }
     }
 
-    public static void minecraftDisplayFirstProgress() {
+    public static void minecraftDisplayFirstProgress() throws IOException {
         displayProgress(Translation.translate("betterloadingscreen.state.minecraft_init", "Minecraft Initializing"), 0F);
     }
 }

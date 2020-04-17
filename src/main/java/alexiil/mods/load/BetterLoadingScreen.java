@@ -1,6 +1,8 @@
 package alexiil.mods.load;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -42,9 +44,9 @@ public class BetterLoadingScreen {
     private static List<Release> releases = null;
     private static Commit thisCommit = null;
     public static ModMetadata meta;
-
+    
     @EventHandler
-    public void construct(FMLConstructionEvent event) {
+    public void construct(FMLConstructionEvent event) throws IOException {
         ModLoadingListener thisListener = null;
         for (ModContainer mod : Loader.instance().getActiveModList()) {
             if (mod instanceof FMLModContainer) {

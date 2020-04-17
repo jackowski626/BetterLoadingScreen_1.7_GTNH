@@ -1,5 +1,6 @@
 package alexiil.mods.load;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,31 +118,31 @@ public class ModLoadingListener {
     }
 
     @Subscribe
-    public void construct(FMLConstructionEvent event) {
+    public void construct(FMLConstructionEvent event) throws IOException {
         doProgress(State.CONSTRUCT, this);
     }
 
     @Subscribe
-    public void preinit(FMLPreInitializationEvent event) {
+    public void preinit(FMLPreInitializationEvent event) throws IOException {
         doProgress(State.PRE_INIT, this);
     }
 
     @Subscribe
-    public void init(FMLInitializationEvent event) {
+    public void init(FMLInitializationEvent event) throws IOException {
         doProgress(State.INIT, this);
     }
 
     @Subscribe
-    public void postinit(FMLPostInitializationEvent event) {
+    public void postinit(FMLPostInitializationEvent event) throws IOException {
         doProgress(State.POST_INIT, this);
     }
 
     @Subscribe
-    public void loadComplete(FMLLoadCompleteEvent event) {
+    public void loadComplete(FMLLoadCompleteEvent event) throws IOException {
         doProgress(State.LOAD_COMPLETE, this);
     }
 
-    public static void doProgress(State state, ModLoadingListener mod) {
+    public static void doProgress(State state, ModLoadingListener mod) throws IOException {
         if (stage == null)
             if (mod == null)
                 stage = new ModStage(state, 0);
