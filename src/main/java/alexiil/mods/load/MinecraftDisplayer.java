@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -57,7 +59,7 @@ public class MinecraftDisplayer implements IDisplayer {
     private String GTprogressAnimated = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
     private String progressAnimated = "betterloadingscreen:textures/mainProgressBar.png";
     private String title = "betterloadingscreen:textures/transparent.png";
-    private String background = "betterloadingscreen:textures/background.png";
+    private String background = "betterloadingscreen:textures/backgrounds/background1.png";
     private int[] titlePos = new int[] {0, 0, 256, 256, 0, 50, 187, 145};
     private int[] GTprogressPos = new int[] {0, 0, 172, 12, 0, -83, 172, 6};
     private int[] GTprogressPosAnimated = new int[] {0, 12, 172, 12, 0, -83, 172, 6};
@@ -70,6 +72,8 @@ public class MinecraftDisplayer implements IDisplayer {
     private int[] GTprogressPercentagePos = new int[] {0, -75};
     private boolean textShadow = true;
     private String textColor = "ffffff";
+    private boolean randomBackgrounds  = false;
+    private String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png"};
     public static boolean isNice = false;
     public static boolean isRegisteringGTmaterials;
     public static boolean isReplacingVanillaMaterials = false;
@@ -168,6 +172,48 @@ public class MinecraftDisplayer implements IDisplayer {
     	return res;
     }
     
+    //after some thinking, this function is quite muda
+    /*public boolean isSystemLineSeparatorAtIndex(String str, int index) {
+    	boolean res = false;
+    	
+    	return res;
+    }*/
+    
+    public String parseBackgroundArraytoCFGList(String[] backgrounds) {
+    	String res = "{";//+System.lineSeparator();
+    	for (int i = 0; i < backgrounds.length; i++) {
+			res += "" + backgrounds[i];
+			if (i < backgrounds.length - 1) {
+				res += ", ";//+System.lineSeparator();
+			}
+		}
+    	res += "}";
+    	return res;
+    }
+
+    public String[] parseBackgroundCFGListToArray(String backgrounds) {
+    	String[] res;
+    	int numberOfBackgrounds = 1;
+    	String stringBuffer = "";
+    	for (int i = 0; i < backgrounds.length(); i++) {
+    		if (String.valueOf(backgrounds.charAt(i)).equals(",")) {
+    			numberOfBackgrounds++;
+    		}
+    	}
+    	res = new String[numberOfBackgrounds];
+    	for (int i = 0, j = 0; i < backgrounds.length(); i++) {
+    		if (!String.valueOf(backgrounds.charAt(i)).equals("{") && !String.valueOf(backgrounds.charAt(i)).equals("}") && !String.valueOf(backgrounds.charAt(i)).equals(",") && !String.valueOf(backgrounds.charAt(i)).equals(" ") && !String.valueOf(backgrounds.charAt(i)).equals("\t")) {
+    			stringBuffer += String.valueOf(backgrounds.charAt(i));
+    		}
+    		if (String.valueOf(backgrounds.charAt(i)).equals(",") || String.valueOf(backgrounds.charAt(i)).equals("}")) {
+    			res[j] = stringBuffer;
+    			stringBuffer = "";
+    			j++;
+    		}
+    	}
+    	return res;
+    }
+    
     // Minecraft's display hasn't been created yet, so don't bother trying
     // to do anything now
     @Override
@@ -186,7 +232,7 @@ public class MinecraftDisplayer implements IDisplayer {
                 + n +" - If you use the Russian mod \"Client Fixer\" then change this to \"textures/font/ascii_fat.png\"" + n;
         fontTexture = cfg.getString("font", "general", defaultFontTexture, comment4);
         
-        String comment5 = "Path to background resource, leave blank if you don't have/want one"+ n +"You can use a resourcepack"
+        String comment5 = "Path to background resource."+ n +"You can use a resourcepack"
         		+ " or resource loader for custom resources.";
         background = cfg.getString("background", "layout", background, comment5);
         String comment6 = "Path to logo/title resource";
@@ -239,6 +285,17 @@ public class MinecraftDisplayer implements IDisplayer {
         String comment21 = "Color of text in hexadecimal format";
         textColor = cfg.getString("textColor", "layout", textColor, comment21);
         
+        //Stuff related to random backgrounds
+        String comment22 = "Whether display a random background from the random backgrounds list";
+        randomBackgrounds = Boolean.parseBoolean(cfg.getString("randomBackgrounds", "layout", String.valueOf(randomBackgrounds), comment22));
+        String comment23 = "List of paths to backgrounds that will be used if randomBackgrounds is true."+System.lineSeparator()+
+        		"The paths must be separated by commas."+System.lineSeparator();
+        randomBackgroundArray = parseBackgroundCFGListToArray((cfg.getString("backgroundList", "layout", parseBackgroundArraytoCFGList(randomBackgroundArray), comment23)));
+        if (randomBackgrounds) {
+        	Random rand = new Random();
+			background = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+		}
+        
         // Add ourselves as a resource pack
         if (!preview) {
             if (!ProgressDisplayer.coreModLocation.isDirectory())
@@ -255,144 +312,10 @@ public class MinecraftDisplayer implements IDisplayer {
         /*if (!configDir.exists()) {
             configDir.mkdirs();
         }*/
-        
-        /*
-        // Image Config
-        images = new ImageRender[10];
-        String progress = "betterloadingscreen:textures/progressBars.png";
-        String title = "textures/gui/title/mojang.png";
-        images[0] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
-        images[1] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -30, 0, 0), "000000", null, "");
-        images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "000000", null, "");
-        images[3] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -50, 182, 5));
-        images[4] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -50, 182, 5));
-        
-        //GT
-        images[5] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -60, 0, 0), "000000", null, "");
-        images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -70, 0, 0), "000000", null, "");
-        images[7] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 10, 182, 5), new Area(0, -80, 182, 5));
-        images[8] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 15, 182, 5), new Area(0, -80, 182, 5));
-        //
-        
-        images[9] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
-
-        if (!preview) {
-            SplashScreen splashScreen = SplashScreen.getSplashScreen();
-            if (splashScreen != null)
-                splashScreen.close();
-        }
-
-        ImageRender[] defaultImageRender = images;
-
-        File imagesFile = new File(configDir, "images.json");
-        JsonConfig<ImageRender[]> imagesConfig = new JsonConfig<ImageRender[]>(imagesFile, ImageRender[].class, images);
-        images = imagesConfig.load();
-
-        for (ImageRender ir : images) {
-            if (ir.type == EType.CLEAR_COLOUR) {
-                clearRed = ir.getRed();
-                clearGreen = ir.getGreen();
-                clearBlue = ir.getBlue();
-            }
-        }
-
-        // Preset one is the default one
-        definePreset(configDir, "preset one", defaultImageRender);
-
-        // Preset two uses something akin to minecraft's loading screen when loading a world
-        ImageRender[] presetData = new ImageRender[5];
-        presetData[0] = new ImageRender("textures/gui/options_background.png", EPosition.CENTER, EType.STATIC, new Area(0, 0, 65536, 65536),
-                new Area(0, 0, 8192, 8192), "404040", null, "Background image");
-        presetData[1] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, 0, 0, 0), "FFFFFF", null,
-                "The current operation");
-        presetData[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -10, 0, 0), "FFFFFF", null,
-                "The overall percentage progress");
-        presetData[3] = new ImageRender(fontTexture, EPosition.BOTTOM_CENTER, EType.STATIC_TEXT, null, new Area(0, 10, 0, 0), "FFDD49",
-                "Better Loading Screen by AlexIIL", "Text at the bottom of the screen");
-        presetData[4] = new ImageRender("", null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "Background colour");
-        definePreset(configDir, "preset two", presetData);
-
-        // Preset three uses... idk, TODO: Preset 3 etc
     }
-
-    private void definePreset(File configDir, String name, ImageRender... images) {
-        File presetFile = new File(configDir, name + ".json");
-        JsonConfig<ImageRender[]> presetConfig = new JsonConfig<ImageRender[]>(presetFile, ImageRender[].class, images);
-        presetConfig.createNew();
-    */}
 
     @Override
     public void displayProgress(String text, float percent) {
-    	//questionable code
-    	//new materials loading texture and better spacing. Works
-    	/*
-    	if (alexiil.mods.load.MinecraftDisplayer.isRegisteringGTmaterials || isReplacingVanillaMaterials || isRegisteringBartWorks) {
-    		images = new ImageRender[11];
-            
-            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
-            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 187, 145));
-
-            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -65, 0, 0), "ffffff", null, "");
-            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -75, 0, 0), "ffffff", null, "");
-            //progressbars
-            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
-            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
-            
-            ///GT
-            images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -30, 0, 0), "ffffff", null, "");
-            images[7] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "ffffff", null, "");
-            //progressbars
-            images[8] = new ImageRender(GTprogress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 172, 12), new Area(0, -83, 172, 6));
-            images[9] = new ImageRender(GTprogress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 12, 172, 12), new Area(0, -83, 172, 6));
-            ///
-
-            images[10] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
-            //
-		}	else {
-			images = new ImageRender[7];
-            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
-            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 50, 187, 145));
-            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(0, -30, 0, 0), "ffffff", null, "");
-            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(0, -40, 0, 0), "ffffff", null, "");
-            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(0, 0, 194, 24), new Area(0, -50, 194, 16));
-            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(0, 24, 194, 24), new Area(0, -50, 194, 16));
-            images[6] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
-		}*/
-    	
-    	/* backup before removing short names
-    	if (alexiil.mods.load.MinecraftDisplayer.isRegisteringGTmaterials || isReplacingVanillaMaterials || isRegisteringBartWorks) {
-    		images = new ImageRender[11];
-            
-            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
-            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(tp[0], tp[1], tp[2], tp[3]), new Area(tp[4], tp[5], tp[6], tp[7]));
-
-            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(gtptp[0], gtptp[1], 0, 0), "ffffff", null, "");
-            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(gtppp[0], gtppp[1], 0, 0), "ffffff", null, "");
-            //progressbars
-            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(pp[0], pp[1], pp[2], pp[3]), new Area(pp[4], pp[5], pp[6], pp[7]));
-            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(ppa[0], ppa[1], ppa[2], ppa[3]), new Area(ppa[4], ppa[5], ppa[6], ppa[7]));
-            
-            ///GT
-            images[6] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(ptp[0], ptp[1], 0, 0), "ffffff", null, "");
-            images[7] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(ppp[0], ppp[1], 0, 0), "ffffff", null, "");
-            //progressbars
-            images[8] = new ImageRender(GTprogress, EPosition.CENTER, EType.STATIC, new Area(gttp[0], gttp[1], gttp[2], gttp[3]), new Area(gttp[4], gttp[5], gttp[6], gttp[7]));
-            images[9] = new ImageRender(GTprogress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(gttpa[0], gttpa[1], gttpa[2], gttpa[3]), new Area(gttpa[4], gttpa[5], gttpa[6], gttpa[7]));
-            ///
-
-            images[10] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
-            //
-		}	else {
-			images = new ImageRender[7];
-            images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
-            images[1] = new ImageRender(title, EPosition.CENTER, EType.STATIC, new Area(tp[0], tp[1], tp[2], tp[3]), new Area(tp[4], tp[5], tp[6], tp[7]));
-            images[2] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_STATUS, null, new Area(ptp[0], ptp[1], 0, 0), "ffffff", null, "");
-            images[3] = new ImageRender(fontTexture, EPosition.CENTER, EType.DYNAMIC_TEXT_PERCENTAGE, null, new Area(ppp[0], ppp[1], 0, 0), "ffffff", null, "");
-            images[4] = new ImageRender(progress, EPosition.CENTER, EType.STATIC, new Area(pp[0], pp[1], pp[2], pp[3]), new Area(pp[4], pp[5], pp[6], pp[7]));
-            images[5] = new ImageRender(progress, EPosition.CENTER, EType.DYNAMIC_PERCENTAGE, new Area(ppa[0], ppa[1], ppa[2], ppa[3]), new Area(ppa[4], ppa[5], ppa[6], ppa[7]));
-            images[6] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
-		}*/
-    	
     	if (alexiil.mods.load.MinecraftDisplayer.isRegisteringGTmaterials || isReplacingVanillaMaterials || isRegisteringBartWorks) {
     		images = new ImageRender[11];
             
