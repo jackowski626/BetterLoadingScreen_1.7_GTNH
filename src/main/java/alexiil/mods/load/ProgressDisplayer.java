@@ -27,6 +27,7 @@ import net.minecraftforge.common.config.Configuration;
 public class ProgressDisplayer {
 	private static Logger log;
 	private static boolean hasTurnedSplashOff = false;
+	private static boolean forgeSplashWasTrue = false;
     public interface IDisplayer {
                 void open(Configuration cfg);
 
@@ -180,18 +181,20 @@ public class ProgressDisplayer {
         cfg.save();
     }
     
-    public static void turnForgeSplashOff(String file) throws IOException {
+    public static boolean turnForgeSplashOff(String file) throws IOException {
     	log = LogManager.getLogger("betterloadingscreen");
+    	boolean hasTurnedOff = false;
     	BufferedReader reader = null;
         try {
             reader = new BufferedReader(new FileReader(file));
             StringBuffer inputBuffer = new StringBuffer();
-            System.out.println("got the file");
+            //System.out.println("got the file");
             String line;
             while ((line = reader.readLine()) != null) {
 				//System.out.println(line);
 				if (line.equals("enabled=true")) {
 					line = "enabled=false";
+					hasTurnedOff = true;
 				}
 				inputBuffer.append(line);
 				inputBuffer.append('\n');
@@ -204,7 +207,36 @@ public class ProgressDisplayer {
             log.info("Turned Forge splash screen off in splash.properties");
         }
         catch (FileNotFoundException e) {
-            System.out.println("Eror opening splash.properties");
+        	log.warn("Error while opening splash.properties");
+        }
+        return hasTurnedOff;
+    }
+    
+    public static void turnForgeSplashOn(String file) throws IOException {
+    	log = LogManager.getLogger("betterloadingscreen");
+    	BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            StringBuffer inputBuffer = new StringBuffer();
+            //System.out.println("got the file");
+            String line;
+            while ((line = reader.readLine()) != null) {
+				//System.out.println(line);
+				if (line.equals("enabled=false")) {
+					line = "enabled=true";
+				}
+				inputBuffer.append(line);
+				inputBuffer.append('\n');
+            }
+            reader.close();
+            
+            FileOutputStream fileOut = new FileOutputStream(file);
+            fileOut.write(inputBuffer.toString().getBytes());
+            fileOut.close();
+            log.info("Turned Forge splash screen on in splash.properties");
+        }
+        catch (FileNotFoundException e) {
+        	log.warn("Error while opening splash.properties");
         }
     }
     
@@ -212,7 +244,9 @@ public class ProgressDisplayer {
     	if (!hasTurnedSplashOff) {
     		String file = "./config/splash.properties";
 			hasTurnedSplashOff = true;
-			turnForgeSplashOff(file);
+    		if (turnForgeSplashOff(file)) {
+    			forgeSplashWasTrue = true;
+    		}
 		}
         if (!hasInitRL) {
             loadResourceLoader();
@@ -222,7 +256,7 @@ public class ProgressDisplayer {
         displayer.displayProgress(text, percent);
     }
 
-    public static void close() {
+    public static void close() throws IOException {
         if (displayer == null)
             return;
         displayer.close();
@@ -239,6 +273,10 @@ public class ProgressDisplayer {
                 }
             }.start();
         }
+        String file = "./config/splash.properties";
+        if (forgeSplashWasTrue) {
+			turnForgeSplashOn(file);
+		}
     }
 
     private static void overrideForgeSplashProgress() {

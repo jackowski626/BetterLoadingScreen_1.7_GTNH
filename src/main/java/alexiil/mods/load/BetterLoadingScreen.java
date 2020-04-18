@@ -84,7 +84,7 @@ public class BetterLoadingScreen {
 
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
-    public void guiOpen(GuiOpenEvent event) {
+    public void guiOpen(GuiOpenEvent event) throws IOException {
         if (event.gui != null && event.gui instanceof GuiMainMenu)
             ProgressDisplayer.close();
     }
@@ -97,7 +97,7 @@ public class BetterLoadingScreen {
 
     @EventHandler
     @SideOnly(Side.SERVER)
-    public void serverAboutToStart(FMLServerAboutToStartEvent event) {
+    public void serverAboutToStart(FMLServerAboutToStartEvent event) throws IOException {
         ProgressDisplayer.close();
     }
 
