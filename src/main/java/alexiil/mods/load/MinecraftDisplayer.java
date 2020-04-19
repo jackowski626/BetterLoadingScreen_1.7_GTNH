@@ -61,8 +61,10 @@ public class MinecraftDisplayer implements IDisplayer {
     private String title = "betterloadingscreen:textures/transparent.png";
     private String background = "betterloadingscreen:textures/backgrounds/background1.png";
     private int[] titlePos = new int[] {0, 0, 256, 256, 0, 50, 187, 145};
-    private int[] GTprogressPos = new int[] {0, 0, 172, 12, 0, -83, 172, 6};
-    private int[] GTprogressPosAnimated = new int[] {0, 12, 172, 12, 0, -83, 172, 6};
+    /*private int[] GTprogressPos = new int[] {0, 0, 172, 12, 0, -83, 172, 6};
+    private int[] GTprogressPosAnimated = new int[] {0, 12, 172, 12, 0, -83, 172, 6};*/
+    private int[] GTprogressPos = new int[] {0, 0, 194, 24, 0, -83, 188, 12};
+    private int[] GTprogressPosAnimated = new int[] {0, 24, 194, 24, 0, -83, 188, 12};
     private int[] progressPos = new int[] {0, 0, 194, 24, 0, -50, 194, 16};
     private int[] progressPosAnimated = new int[] {0, 24, 194, 24, 0, -50, 194, 16};
     private int[] progressTextPos = new int[] {0, -30};
