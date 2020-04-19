@@ -72,12 +72,18 @@ public class MinecraftDisplayer implements IDisplayer {
     private int[] GTprogressPercentagePos = new int[] {0, -75};
     private boolean textShadow = true;
     private String textColor = "ffffff";
-    private boolean randomBackgrounds  = false;
-    private String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png"};
+    private boolean randomBackgrounds  = true;
+    private String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png", "betterloadingscreen:textures/backgrounds/background3.png", "betterloadingscreen:textures/backgrounds/background4.png", "betterloadingscreen:textures/backgrounds/background5.png","betterloadingscreen:textures/backgrounds/background6.png", "betterloadingscreen:textures/backgrounds/background7.png", "betterloadingscreen:textures/backgrounds/background8.png", "betterloadingscreen:textures/backgrounds/background9.png", "betterloadingscreen:textures/backgrounds/background10.png", "betterloadingscreen:textures/backgrounds/background11.png", "betterloadingscreen:textures/backgrounds/background12.png","betterloadingscreen:textures/backgrounds/background13.png"};
     public static boolean isNice = false;
     public static boolean isRegisteringGTmaterials;
     public static boolean isReplacingVanillaMaterials = false;
     public static boolean isRegisteringBartWorks = false;
+    public static boolean blending = false;
+    public static boolean blendingJustSet = false;
+    public static float blendAlpha = 1F;
+    public static int blendCounter = 0;
+    private static String newBlendImage = "none";
+    private static int nonStaticElementsToGo;
     private Logger log;
     
     public static void playFinishedSound() {
@@ -316,9 +322,22 @@ public class MinecraftDisplayer implements IDisplayer {
 
     @Override
     public void displayProgress(String text, float percent) {
+    	if (!alexiil.mods.load.MinecraftDisplayer.blending) {
+    		if (!(percent == 0)) {
+    			alexiil.mods.load.MinecraftDisplayer.blendCounter++;
+    			if((!isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials) && blendCounter > 200) {
+    				blendCounter = 0;
+			    	System.out.println("shrek");
+			    	alexiil.mods.load.MinecraftDisplayer.blending = true;
+			    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
+			    	alexiil.mods.load.MinecraftDisplayer.blendAlpha = 1;
+    			}
+    		}
+    	}
     	if (alexiil.mods.load.MinecraftDisplayer.isRegisteringGTmaterials || isReplacingVanillaMaterials || isRegisteringBartWorks) {
     		images = new ImageRender[11];
-            
+    		nonStaticElementsToGo = 10;
+    		
     		if (!background.equals("")) {
     			images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
 			} else {
@@ -347,6 +366,7 @@ public class MinecraftDisplayer implements IDisplayer {
             //
 		}	else {
 			images = new ImageRender[7];
+			nonStaticElementsToGo = 6;
 			if (!background.equals("")) {
     			images[0] = new ImageRender(background, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
 			} else {
@@ -373,6 +393,7 @@ public class MinecraftDisplayer implements IDisplayer {
         if (!isRegisteringGTmaterials && !isReplacingVanillaMaterials && !isRegisteringBartWorks) {
 			lastPercent = percent;
 		}
+        
         for (ImageRender image : images) {
 //        	if (!usingGT) {
 //				lastPercent = percent;
@@ -430,7 +451,7 @@ public class MinecraftDisplayer implements IDisplayer {
             PWidth = render.position.width == 0 ? resolution.getScaledWidth() : render.position.width;
             PHeight = render.position.height == 0 ? resolution.getScaledHeight() : render.position.height;
         }
-        GL11.glColor3f(render.getRed(), render.getGreen(), render.getBlue());
+        GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), 1);
         switch (render.type) {
             case DYNAMIC_PERCENTAGE: {
                 ResourceLocation res = new ResourceLocation(render.resourceLocation);
@@ -484,10 +505,135 @@ public class MinecraftDisplayer implements IDisplayer {
 				break;
             }
             case STATIC: {
-                ResourceLocation res = new ResourceLocation(render.resourceLocation);
-                textureManager.bindTexture(res);
-                drawRect(startX, startY, PWidth, PHeight, render.texture.x, render.texture.y, render.texture.width, render.texture.height);
-                break;
+            	
+            	if (blending) {
+            		preDisplayScreen();
+            		GL11.glClearColor(clearRed, clearGreen, clearBlue, 1);
+            		//GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+            		if (blendingJustSet) {
+            			blendingJustSet = false;
+            		    System.out.println("start blend");
+            			Random rand = new Random();
+            			newBlendImage = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+            		}
+            		
+            		GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), blendAlpha);//+0.1F);
+            		
+            		blendAlpha -= 0.01;
+            		System.out.println("blendAlpha: "+blendAlpha);
+            		if (blendAlpha <= 0) {
+						blending = false;
+						background = newBlendImage;
+						
+					}
+            		try {
+						Thread.sleep(70);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            		
+            		ResourceLocation res = new ResourceLocation(render.resourceLocation);
+                    textureManager.bindTexture(res);
+                    drawRect(startX, startY, PWidth, PHeight, render.texture.x, render.texture.y, render.texture.width, render.texture.height);
+                    //drawImageRender(render, text, percent);
+                    
+                    ImageRender render2 = new ImageRender(newBlendImage, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
+                    GL11.glColor4f(render2.getRed(), render2.getGreen(), render2.getBlue(), 1-blendAlpha-0.05F);//+0.01F);
+                    ResourceLocation res2 = new ResourceLocation(render2.resourceLocation);
+                    textureManager.bindTexture(res2);
+                    drawRect(startX, startY, PWidth, PHeight, render2.texture.x, render2.texture.y, render2.texture.width, render2.texture.height);
+                    //drawImageRender(render2, text, percent);
+                    
+                    //rest if the images
+                    //if (nonStaticElementsToGo > ) {
+						
+					//}
+                    //loading bar static
+                    GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), 1F);
+                    ImageRender render3 = new ImageRender(images[4].resourceLocation, images[4].positionType, images[4].type, images[4].texture, images[4].position);
+                    startX = progressPos[0];//render3.transformX(resolution.getScaledWidth());
+                    startY = progressPos[1];//render3.transformY(resolution.getScaledHeight());
+                    ResourceLocation res3 = new ResourceLocation(images[4].resourceLocation);
+                    textureManager.bindTexture(res3);
+                    /*double visibleWidth = PWidth * percent;
+                    double textureWidth = render.texture.width * percent;*/
+                    startX = render3.transformX(resolution.getScaledWidth());
+                    startY = render3.transformY(resolution.getScaledHeight());
+                    PWidth = 0;
+                    PHeight = 0;
+                    if (render3.position != null) {
+                        PWidth = render3.position.width == 0 ? resolution.getScaledWidth() : render3.position.width;
+                        PHeight = render3.position.height == 0 ? resolution.getScaledHeight() : render3.position.height;
+                    }
+                    drawRect(startX, startY,PWidth, PHeight, render3.texture.x, render3.texture.y, render3.texture.width, render3.texture.height);
+                    //
+                    
+                  //loading bar animated
+                    GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), 1F);
+                    ImageRender render4 = new ImageRender(images[5].resourceLocation, images[5].positionType, images[5].type, images[5].texture, images[5].position);
+                    //startX = progressPos[0];//render3.transformX(resolution.getScaledWidth());
+                    //startY = progressPos[1];//render3.transformY(resolution.getScaledHeight());
+                    ResourceLocation res4 = new ResourceLocation(images[5].resourceLocation);
+                    textureManager.bindTexture(res4);
+                    /*double visibleWidth = PWidth * percent;
+                    double textureWidth = render.texture.width * percent;*/
+                    startX = render4.transformX(resolution.getScaledWidth());
+                    startY = render4.transformY(resolution.getScaledHeight());
+                    PWidth = 0;
+                    PHeight = 0;
+                    if (render4.position != null) {
+                        PWidth = render4.position.width == 0 ? resolution.getScaledWidth() : render4.position.width;
+                        PHeight = render4.position.height == 0 ? resolution.getScaledHeight() : render4.position.height;
+                    }
+                    double visibleWidth = PWidth * percent;
+                    double textureWidth = render4.texture.width * percent;
+                    drawRect(startX, startY, visibleWidth, PHeight, render4.texture.x, render4.texture.y, textureWidth, render4.texture.height);
+                    //
+                    
+                    //dynamic text
+                    ImageRender render5 = new ImageRender(images[2].resourceLocation, images[2].positionType, images[2].type, images[2].texture, images[2].position);
+                    FontRenderer font = fontRenderer(render5.resourceLocation);
+                    int width = font.getStringWidth(text);
+                    startX = render5.positionType.transformX(render5.position.x, resolution.getScaledWidth() - width);
+                    startY = render5.positionType.transformY(render5.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
+                    if (textShadow) {
+                    	font.drawStringWithShadow(text, startX, startY, intColor);
+                    } else {
+                    	drawString(font, text, startX, startY, intColor);
+                    }
+                    //
+                    
+                    //dynamic text percentage
+                    ImageRender render6 = new ImageRender(images[3].resourceLocation, images[3].positionType, images[3].type, images[3].texture, images[3].position);
+                    String percentage = (int) (percent * 100) + "%";
+                    width = font.getStringWidth(percentage);
+                    startX = render6.positionType.transformX(render6.position.x, resolution.getScaledWidth() - width);
+                    startY = render6.positionType.transformY(render6.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
+                    if (textShadow) {
+                    	font.drawStringWithShadow(percentage, startX, startY, /*render.getColour()*/intColor);
+    				} else {
+    					drawString(font, percentage, startX, startY, intColor);
+    				}
+                    //
+                    
+                    postDisplayScreen();
+                    drawImageRender(render, text, percent);
+            		break;
+            	} else {
+            		if (!newBlendImage.contentEquals("none")) {
+						
+						render = new ImageRender(newBlendImage, EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 256, 256));
+						newBlendImage = "none";
+            		}
+            		GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), 1F);
+            		ResourceLocation res = new ResourceLocation(render.resourceLocation);
+                    textureManager.bindTexture(res);
+                    drawRect(startX, startY, PWidth, PHeight, render.texture.x, render.texture.y, render.texture.width, render.texture.height);
+                    break;
+            	}
+                
+                //break;
             }
             case CLEAR_COLOUR:// Ignore this, as its set elsewhere
                 break;
@@ -511,6 +657,8 @@ public class MinecraftDisplayer implements IDisplayer {
     }
 
     private void preDisplayScreen() {
+    	//System.out.println("Called preDisplayScreen");
+    	//bruh
         if (textureManager == null) {
             if (preview) {
                 textureManager = mc.renderEngine;
@@ -529,8 +677,9 @@ public class MinecraftDisplayer implements IDisplayer {
                 callAgain = true;
             }
         }
-        if (fontRenderer != mc.fontRenderer)
+        if (fontRenderer != mc.fontRenderer) {
             fontRenderer = mc.fontRenderer;
+        }
         // if (textureManager != mc.renderEngine)
         // textureManager = mc.renderEngine;
         resolution = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
@@ -547,15 +696,22 @@ public class MinecraftDisplayer implements IDisplayer {
         GL11.glEnable(GL11.GL_TEXTURE_2D);
 
         GL11.glClearColor(clearRed, clearGreen, clearBlue, 1);
-        GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        //EXPERIMENTAL!! - DISABLING THE WHITE CLEAT - EXPERIMENTAL!!!!
+        //GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
 
         GL11.glEnable(GL11.GL_BLEND);
+        //GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
         GL11.glEnable(GL11.GL_ALPHA_TEST);
+        //GL11.glEnable(1);
+        //GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
         GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
 
         GL11.glColor4f(1, 1, 1, 1);
+        
+        //System.out.println("alpha: "+GL11.GL_ALPHA);
+        //GL11.GL_ALPHA = 1000;
     }
 
     public ImageRender[] getImageData() {

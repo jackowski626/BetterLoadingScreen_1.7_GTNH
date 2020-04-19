@@ -20,6 +20,7 @@ import com.google.common.eventbus.EventBus;
 
 import cpw.mods.fml.client.event.ConfigChangedEvent.OnConfigChangedEvent;
 import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.FMLModContainer;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.Mod;
@@ -28,8 +29,13 @@ import cpw.mods.fml.common.Mod.Instance;
 import cpw.mods.fml.common.ModContainer;
 import cpw.mods.fml.common.ModMetadata;
 import cpw.mods.fml.common.event.FMLConstructionEvent;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
+import cpw.mods.fml.common.event.FMLLoadEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerAboutToStartEvent;
+import cpw.mods.fml.common.event.FMLStateEvent;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -71,8 +77,14 @@ public class BetterLoadingScreen {
                 }
             }
         }
-        if (thisListener != null)
+        if (thisListener != null) {
             ModLoadingListener.doProgress(State.CONSTRUCT, thisListener);
+            /*if (!alexiil.mods.load.MinecraftDisplayer.blending) {
+    	    	System.out.println("shrek");
+    	    	alexiil.mods.load.MinecraftDisplayer.blending = true;
+    	    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
+        	}*/
+        }
     }
 
     @EventHandler
@@ -80,6 +92,25 @@ public class BetterLoadingScreen {
         MinecraftForge.EVENT_BUS.register(instance);
         FMLCommonHandler.instance().bus().register(instance);
         meta = event.getModMetadata();
+        /*alexiil.mods.load.MinecraftDisplayer.blending = true;
+    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;*/
+    }
+    
+    @EventHandler
+    public void init(FMLInitializationEvent event) {
+    	System.out.println("ricardo milos");
+    	//alexiil.mods.load.MinecraftDisplayer.blending = true;
+    	//alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
+    }
+    
+    @EventHandler
+    public void inithmm(FMLStateEvent event) {
+    	/*if (!alexiil.mods.load.MinecraftDisplayer.blending) {
+	    	System.out.println("shrek");
+	    	alexiil.mods.load.MinecraftDisplayer.blending = true;
+	    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
+    	}*/
+    	System.out.println("bruh: "+event.toString());
     }
 
     @SubscribeEvent
