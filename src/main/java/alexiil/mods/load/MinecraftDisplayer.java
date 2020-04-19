@@ -53,7 +53,7 @@ public class MinecraftDisplayer implements IDisplayer {
     private IResourcePack myPack;
     private float clearRed = 1, clearGreen = 1, clearBlue = 1;
     private boolean hasSaidNice = false;
-    private float lastPercent = 0;
+    public static float lastPercent = 0;
     private String GTprogress = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
     private String progress = "betterloadingscreen:textures/mainProgressBar.png";
     private String GTprogressAnimated = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
@@ -74,6 +74,12 @@ public class MinecraftDisplayer implements IDisplayer {
     private String textColor = "ffffff";
     private boolean randomBackgrounds  = true;
     private String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png", "betterloadingscreen:textures/backgrounds/background3.png", "betterloadingscreen:textures/backgrounds/background4.png", "betterloadingscreen:textures/backgrounds/background5.png","betterloadingscreen:textures/backgrounds/background6.png", "betterloadingscreen:textures/backgrounds/background7.png", "betterloadingscreen:textures/backgrounds/background8.png", "betterloadingscreen:textures/backgrounds/background9.png", "betterloadingscreen:textures/backgrounds/background10.png", "betterloadingscreen:textures/backgrounds/background11.png", "betterloadingscreen:textures/backgrounds/background12.png","betterloadingscreen:textures/backgrounds/background13.png"};
+    private boolean blendingEnabled = true;
+    private int threadSleepTime = 20;
+    private int changeFrequency = 340;
+    private float alphaDecreaseStep = 0.01F;
+    private boolean shouldGLClear = false;
+    
     public static boolean isNice = false;
     public static boolean isRegisteringGTmaterials;
     public static boolean isReplacingVanillaMaterials = false;
@@ -85,6 +91,10 @@ public class MinecraftDisplayer implements IDisplayer {
     private static String newBlendImage = "none";
     private static int nonStaticElementsToGo;
     private Logger log;
+    
+    public static float getLastPercent() {
+    	return lastPercent;
+    }
     
     public static void playFinishedSound() {
         SoundHandler soundHandler = Minecraft.getMinecraft().getSoundHandler();
@@ -220,6 +230,17 @@ public class MinecraftDisplayer implements IDisplayer {
     	return res;
     }
     
+    public String randomBackground(String currentBG) {
+    	System.out.println("currentBG is: "+currentBG);
+    	Random rand = new Random();
+    	String res = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+    	while (res.equals(currentBG)) {
+    		res = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+    	}
+    	System.out.println("res is: "+res);
+    	return res;
+    }
+    
     // Minecraft's display hasn't been created yet, so don't bother trying
     // to do anything now
     @Override
@@ -297,6 +318,27 @@ public class MinecraftDisplayer implements IDisplayer {
         String comment23 = "List of paths to backgrounds that will be used if randomBackgrounds is true."+System.lineSeparator()+
         		"The paths must be separated by commas."+System.lineSeparator();
         randomBackgroundArray = parseBackgroundCFGListToArray((cfg.getString("backgroundList", "layout", parseBackgroundArraytoCFGList(randomBackgroundArray), comment23)));
+        
+        
+      //Stuff related to blending
+        String comment24 = "Whether backgrounds should change randomly during loading. They are taken from the random background list";
+        blendingEnabled = Boolean.parseBoolean(cfg.getString("backgroundChanging", "changing background", String.valueOf(blendingEnabled), comment24));
+        String comment25 = "Time in milliseconds between each image change (smooth blend)."+System.lineSeparator()+
+        		"The animation runs on the main thread (because OpenGL bruh momento), so setting this higher than"+System.lineSeparator()+
+        		"default is not recommended (basically: if image transition running, your mods not loading)";
+        threadSleepTime = Integer.parseInt(cfg.getString("threadSleepTime", "changing background", String.valueOf(threadSleepTime), comment25));
+        String comment26 = "Each magic amount of time, the DisplayProgress CLS function is called. You have a chance then (if nothing is registering its materials tho)"+System.lineSeparator()+
+        		"to change the background. But not so fast, this function gets called pretty often so I choose to change my background"+System.lineSeparator()+
+        		"each "+String.valueOf(changeFrequency)+"th call of the function. Don't waste the main thread too much, be like me.";
+        changeFrequency = Integer.parseInt(cfg.getString("changeFrequency", "changing background", String.valueOf(changeFrequency), comment26));
+        String comment27 = "Float from 0 to 1. The amount of alpha that is removed from the original image and added to the image that comes after."+System.lineSeparator()+
+        		"Also defined smoothnes of animation. Don't set this too low this time or you'll add time to your pack loading. Probably "+String.valueOf(alphaDecreaseStep)+" still is too low.";
+        alphaDecreaseStep = Float.parseFloat(cfg.getString("alphaDecreaseStep", "changing background", String.valueOf(alphaDecreaseStep), comment27));
+        String comment28 = "No, don't touch that!";
+        shouldGLClear = Boolean.parseBoolean(cfg.getString("shouldGLClear", "changing background", String.valueOf(shouldGLClear), comment28));
+        
+        
+        
         if (randomBackgrounds) {
         	Random rand = new Random();
 			background = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
@@ -325,9 +367,9 @@ public class MinecraftDisplayer implements IDisplayer {
     	if (!alexiil.mods.load.MinecraftDisplayer.blending) {
     		if (!(percent == 0)) {
     			alexiil.mods.load.MinecraftDisplayer.blendCounter++;
-    			if((!isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials) && blendCounter > 200) {
+    			if (blendingEnabled && !isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials && blendCounter > changeFrequency) {
     				blendCounter = 0;
-			    	System.out.println("shrek");
+			    	//System.out.println("Setting blending to true");
 			    	alexiil.mods.load.MinecraftDisplayer.blending = true;
 			    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
 			    	alexiil.mods.load.MinecraftDisplayer.blendAlpha = 1;
@@ -512,22 +554,22 @@ public class MinecraftDisplayer implements IDisplayer {
             		//GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
             		if (blendingJustSet) {
             			blendingJustSet = false;
-            		    System.out.println("start blend");
+            		    //System.out.println("start blend");
             			Random rand = new Random();
-            			newBlendImage = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+            			newBlendImage = randomBackground(render.resourceLocation);//randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
             		}
             		
             		GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), blendAlpha);//+0.1F);
             		
-            		blendAlpha -= 0.01;
-            		System.out.println("blendAlpha: "+blendAlpha);
+            		blendAlpha -= alphaDecreaseStep;
+            		//System.out.println("blendAlpha: "+blendAlpha);
             		if (blendAlpha <= 0) {
 						blending = false;
 						background = newBlendImage;
 						
 					}
             		try {
-						Thread.sleep(70);
+						Thread.sleep(threadSleepTime);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -697,7 +739,9 @@ public class MinecraftDisplayer implements IDisplayer {
 
         GL11.glClearColor(clearRed, clearGreen, clearBlue, 1);
         //EXPERIMENTAL!! - DISABLING THE WHITE CLEAT - EXPERIMENTAL!!!!
-        //GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
+        if (shouldGLClear) {
+            GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);	
+		}
 
         GL11.glEnable(GL11.GL_BLEND);
         //GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);

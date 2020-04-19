@@ -79,11 +79,6 @@ public class BetterLoadingScreen {
         }
         if (thisListener != null) {
             ModLoadingListener.doProgress(State.CONSTRUCT, thisListener);
-            /*if (!alexiil.mods.load.MinecraftDisplayer.blending) {
-    	    	System.out.println("shrek");
-    	    	alexiil.mods.load.MinecraftDisplayer.blending = true;
-    	    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
-        	}*/
         }
     }
 
