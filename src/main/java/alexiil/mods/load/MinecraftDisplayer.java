@@ -446,8 +446,7 @@ public class MinecraftDisplayer implements IDisplayer {
     			images[0] = new ImageRender("betterloadingscreen:textures/salt.png", EPosition.TOP_LEFT, EType.STATIC, new Area(0, 0, 256, 256), new Area(0, 0, 0, 0));
     			images[1] = new ImageRender(fontTexture, EPosition.BOTTOM_LEFT, EType.DYNAMIC_TEXT_STATUS, null, new Area(10, 10, 0, 0), "000000", null, "");
 			} else {
-				images = new ImageRender[1];
-				images[0] = new ImageRender(fontTexture, EPosition.BOTTOM_LEFT, EType.DYNAMIC_TEXT_STATUS, null, new Area(10, 10, 0, 0), "000000", null, "");
+				images = new ImageRender[0];
 			}
     	}
     	
