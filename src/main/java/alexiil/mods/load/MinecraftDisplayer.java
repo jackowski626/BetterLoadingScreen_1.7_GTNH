@@ -2,6 +2,7 @@ package alexiil.mods.load;
 
 import java.awt.SplashScreen;
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -9,18 +10,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
 
+import alexiil.mods.load.json.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 
 import alexiil.mods.load.ProgressDisplayer.IDisplayer;
-import alexiil.mods.load.json.Area;
-import alexiil.mods.load.json.EPosition;
-import alexiil.mods.load.json.EType;
-import alexiil.mods.load.json.ImageRender;
-import alexiil.mods.load.json.JsonConfig;
 import cpw.mods.fml.client.FMLFileResourcePack;
 import cpw.mods.fml.client.FMLFolderResourcePack;
 import net.minecraft.client.Minecraft;
@@ -36,6 +36,8 @@ import net.minecraft.client.resources.IResourcePack;
 import net.minecraft.client.resources.LanguageManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.config.Configuration;
+
+import static java.util.stream.Collectors.toList;
 
 public class MinecraftDisplayer implements IDisplayer {
     private static String sound;
@@ -54,6 +56,7 @@ public class MinecraftDisplayer implements IDisplayer {
     private float clearRed = 1, clearGreen = 1, clearBlue = 1;
     private boolean hasSaidNice = false;
     public static float lastPercent = 0;
+    private List<String> alreadyUsedBGs = new ArrayList<>();
     private String GTprogress = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
     private String progress = "betterloadingscreen:textures/mainProgressBar.png";
     private String GTprogressAnimated = "betterloadingscreen:textures/GTMaterialsprogressBars.png";
@@ -75,13 +78,15 @@ public class MinecraftDisplayer implements IDisplayer {
     private boolean textShadow = true;
     private String textColor = "ffffff";
     private boolean randomBackgrounds  = true;
-    private String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png", "betterloadingscreen:textures/backgrounds/background3.png", "betterloadingscreen:textures/backgrounds/background4.png", "betterloadingscreen:textures/backgrounds/background5.png","betterloadingscreen:textures/backgrounds/background6.png", "betterloadingscreen:textures/backgrounds/background7.png", "betterloadingscreen:textures/backgrounds/background8.png", "betterloadingscreen:textures/backgrounds/background9.png", "betterloadingscreen:textures/backgrounds/background10.png", "betterloadingscreen:textures/backgrounds/background11.png", "betterloadingscreen:textures/backgrounds/background12.png","betterloadingscreen:textures/backgrounds/background13.png"};
+    public static String[] randomBackgroundArray = new String[] {"betterloadingscreen:textures/backgrounds/background1.png", "betterloadingscreen:textures/backgrounds/background2.png", "betterloadingscreen:textures/backgrounds/background3.png", "betterloadingscreen:textures/backgrounds/background4.png", "betterloadingscreen:textures/backgrounds/background5.png","betterloadingscreen:textures/backgrounds/background6.png", "betterloadingscreen:textures/backgrounds/background7.png", "betterloadingscreen:textures/backgrounds/background8.png", "betterloadingscreen:textures/backgrounds/background9.png", "betterloadingscreen:textures/backgrounds/background10.png", "betterloadingscreen:textures/backgrounds/background11.png", "betterloadingscreen:textures/backgrounds/background12.png","betterloadingscreen:textures/backgrounds/background13.png"};
     private boolean blendingEnabled = true;
     private int threadSleepTime = 20;
     private int changeFrequency = 340;
     private float alphaDecreaseStep = 0.01F;
     private boolean shouldGLClear = false;
     private boolean salt = false;
+    private boolean useImgur = true;
+    public static String imgurGalleryLink = "https://imgur.com/gallery/Ks0TrYE";
     
     private boolean saltBGhasBeenRendered = false;
     
@@ -96,6 +101,8 @@ public class MinecraftDisplayer implements IDisplayer {
     private static String newBlendImage = "none";
     private static int nonStaticElementsToGo;
     private Logger log;
+
+    CountDownLatch countDownLatch = new CountDownLatch(1);
     
     public static float getLastPercent() {
     	return lastPercent;
@@ -239,9 +246,16 @@ public class MinecraftDisplayer implements IDisplayer {
     	System.out.println("currentBG is: "+currentBG);
     	Random rand = new Random();
     	String res = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
-    	while (res.equals(currentBG)) {
+        System.out.println("New res is: "+res);
+        System.out.println("Does alreadyUsedBGs contain res?: "+String.valueOf(alreadyUsedBGs.contains(res)));
+    	while (res.equals(currentBG) || alreadyUsedBGs.contains(res)) {
     		res = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+    		System.out.println("Rerolled res is: "+res);
     	}
+    	if (randomBackgroundArray.length == alreadyUsedBGs.size()) {
+    	    alreadyUsedBGs.clear();
+        }
+        alreadyUsedBGs.add(res);
     	System.out.println("res is: "+res);
     	return res;
     }
@@ -261,7 +275,8 @@ public class MinecraftDisplayer implements IDisplayer {
         sound = cfg.getString("sound", "general", defaultSound, comment4);
 
         comment4 = "What font texture to use? Special Cases:"
-                + n +" - If you use the Russian mod \"Client Fixer\" then change this to \"textures/font/ascii_fat.png\"" + n;
+                + n +" - If you use the Russian mod \"Client Fixer\" then change this to \"textures/font/ascii_fat.png\"" + n +
+                "Note: if a resourcepack adds a font, it will be used by CLS.";
         fontTexture = cfg.getString("font", "general", defaultFontTexture, comment4);
         
         String comment5 = "Path to background resource."+ n +"You can use a resourcepack"
@@ -313,40 +328,63 @@ public class MinecraftDisplayer implements IDisplayer {
         
         //Some text properties
         String comment20 = "Whether the text should be rendered with a shadow. Recommended, unless the background is really dark";
-        textShadow = Boolean.parseBoolean(cfg.getString("textShadow", "layout", String.valueOf(textShadow), comment20));
+        textShadow = cfg.getBoolean("textShadow", "layout", textShadow, comment20);
         String comment21 = "Color of text in hexadecimal format";
         textColor = cfg.getString("textColor", "layout", textColor, comment21);
         
         //Stuff related to random backgrounds
         String comment22 = "Whether display a random background from the random backgrounds list";
-        randomBackgrounds = Boolean.parseBoolean(cfg.getString("randomBackgrounds", "layout", String.valueOf(randomBackgrounds), comment22));
-        String comment23 = "List of paths to backgrounds that will be used if randomBackgrounds is true."+System.lineSeparator()+
-        		"The paths must be separated by commas."+System.lineSeparator();
+        randomBackgrounds = cfg.getBoolean("randomBackgrounds", "layout", randomBackgrounds, comment22);
+        String comment23 = "List of paths to backgrounds that will be used if randomBackgrounds is true."+ n +
+        		"The paths must be separated by commas."+ n;
         randomBackgroundArray = parseBackgroundCFGListToArray((cfg.getString("backgroundList", "layout", parseBackgroundArraytoCFGList(randomBackgroundArray), comment23)));
         
         
         //Stuff related to blending
         String comment24 = "Whether backgrounds should change randomly during loading. They are taken from the random background list";
-        blendingEnabled = Boolean.parseBoolean(cfg.getString("backgroundChanging", "changing background", String.valueOf(blendingEnabled), comment24));
-        String comment25 = "Time in milliseconds between each image change (smooth blend)."+System.lineSeparator()+
-        		"The animation runs on the main thread (because OpenGL bruh momento), so setting this higher than"+System.lineSeparator()+
+        blendingEnabled = cfg.getBoolean("backgroundChanging", "changing background", blendingEnabled, comment24);
+        String comment25 = "Time in milliseconds between each image change (smooth blend)."+ n +
+        		"The animation runs on the main thread (because OpenGL bruh momento), so setting this higher than"+n+
         		"default is not recommended (basically: if image transition running, your mods not loading)";
-        threadSleepTime = Integer.parseInt(cfg.getString("threadSleepTime", "changing background", String.valueOf(threadSleepTime), comment25));
-        String comment26 = "Each magic amount of time, the DisplayProgress CLS function is called. You have a chance then (if nothing is registering its materials tho)"+System.lineSeparator()+
-        		"to change the background. But not so fast, this function gets called pretty often so I choose to change my background"+System.lineSeparator()+
+        threadSleepTime = cfg.getInt("threadSleepTime", "changing background", threadSleepTime, 0, 9000, comment25);
+        String comment26 = "Each magic amount of time, the DisplayProgress CLS function is called. You have a chance then (if nothing is registering its materials tho)"+ n +
+        		"to change the background. But not so fast, this function gets called pretty often so I choose to change my background"+ n +
         		"each "+String.valueOf(changeFrequency)+"th call of the function. Don't waste the main thread too much, be like me.";
-        changeFrequency = Integer.parseInt(cfg.getString("changeFrequency", "changing background", String.valueOf(changeFrequency), comment26));
-        String comment27 = "Float from 0 to 1. The amount of alpha that is removed from the original image and added to the image that comes after."+System.lineSeparator()+
+        changeFrequency = cfg.getInt("changeFrequency", "changing background", changeFrequency, 1, 9000, comment26);
+        String comment27 = "Float from 0 to 1. The amount of alpha that is removed from the original image and added to the image that comes after."+ n +
         		"Also defined smoothnes of animation. Don't set this too low this time or you'll add time to your pack loading. Probably "+String.valueOf(alphaDecreaseStep)+" still is too low.";
-        alphaDecreaseStep = Float.parseFloat(cfg.getString("alphaDecreaseStep", "changing background", String.valueOf(alphaDecreaseStep), comment27));
+        alphaDecreaseStep = cfg.getFloat("alphaDecreaseStep", "changing background", alphaDecreaseStep, 0, 1, comment27);
         String comment28 = "No, don't touch that!";
-        shouldGLClear = Boolean.parseBoolean(cfg.getString("shouldGLClear", "changing background", String.valueOf(shouldGLClear), comment28));
+        shouldGLClear = cfg.getBoolean("shouldGLClear", "changing background", shouldGLClear, comment28);
         
         //salt
         String comment29 = "If you want to save a maximum of time on your loading time but don't want to face a black screen, try this.";
-        salt = Boolean.parseBoolean(cfg.getString("salt", "skepticism", String.valueOf(salt), comment29));
+        salt = cfg.getBoolean("salt", "skepticism", salt, comment29);
+
+        //imgur
+        String comment30 = "Set to true if you want to load images from an imgur gallery and use them as backgrounds. WIP, not working yet";
+        useImgur = cfg.getBoolean("useImgur", "imgur", useImgur, comment30);
+        String comment31 = "Link to the imgur gallery";
+        imgurGalleryLink = cfg.getString("imgurGalleryLink", "imgur", imgurGalleryLink, comment31);
+
+        if (false/*useImgur*/) {
+            System.out.println("2hmmm");
+            List<Thread> workers = Stream
+                    .generate(() -> new Thread(new DlAllImages(countDownLatch)))
+                    .limit(1)
+                    .collect(toList());
+            workers.forEach(Thread::start);
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
         
+
+
         if (randomBackgrounds && !salt) {
+            System.out.println("choosing first random bg");
         	Random rand = new Random();
 			background = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
 		}

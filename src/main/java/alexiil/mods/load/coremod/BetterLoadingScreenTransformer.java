@@ -32,7 +32,7 @@ public class BetterLoadingScreenTransformer implements IClassTransformer, Opcode
         }
         catch (Throwable t) {
             System.out.println("An issue occoured while transforming " + transformedName);
-            t.printStackTrace();
+            //t.printStackTrace();
         }
         return basicClass;
     }

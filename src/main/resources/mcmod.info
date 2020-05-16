@@ -1,16 +1,16 @@
 [
 {
   "modid": "betterloadingscreen",
-  "name": "Better Loading Screen",
+  "name": "Better Loading Screen GT:NH",
   "description": "A better loading screen that shows you the status of minecraft's loading time",
   "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
+  "mcversion": "1.7.10",
+  "url": "https://github.com/GTNewHorizons/BetterLoadingScreen",
   "updateUrl": "",
-  "authorList": ["AlexIIL"],
-  "credits": "",
+  "authorList": ["AlexIIL", "jackowski626"],
+  "credits": "To AlexIIL who created the mod, to Houston for graphical work",
   "logoFile": "assets/betterloadingscreen/textures/logo.png",
-  "screenshots": [],
+  "screenshots": ["assets/betterloadingscreen/textures/screenshot.png"],
   "dependencies": []
 }
 ]
