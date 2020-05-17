@@ -1,6 +1,6 @@
 package alexiil.mods.load;
 
-import java.io.File;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -11,9 +11,11 @@ import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import alexiil.mods.load.json.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 
 import alexiil.mods.load.ProgressDisplayer.IDisplayer;
@@ -35,7 +37,7 @@ import net.minecraftforge.common.config.Configuration;
 
 public class MinecraftDisplayer implements IDisplayer {
     private static String sound;
-    private static String defaultSound = "";//"random.levelup";
+    private static String defaultSound = "random.levelup";
     private static String fontTexture;
     private static String defaultFontTexture = "textures/font/ascii.png";
     private final boolean preview;
@@ -72,7 +74,8 @@ public class MinecraftDisplayer implements IDisplayer {
     private int[] tipsTextPos = new int[] {0, 5};
     private String baseTipsTextPos = "BOTTOM_CENTER";
     private boolean tipsEnabled = true;
-    private String[] randomTips = new String[] {"Best pack in the world!", "Infinite water sources are disabled", "Got a question? Join our Discord server", "Don't give ideas to 0lafe", "Don't feed your machines after midnight"};
+    private String[] randomTips;
+    //private String[] randomTips = new String[] {"Got a question? Join our Discord server","Don't give ideas to 0lafe","Don't feed your machines after midnight","Make sure you have installed a backup mod","Material tiers play a role when breaking pipes","If a machine catches fire, it can explode","Adding water to an empty but hot Boiler will cause an explosion","Avoid eldritch obelisks","You can bind the quests menu to a key, instead of using the book","Pam's gardens can be picked up with right-click","Placing a garden makes it spread","Water garden can grow on land","Battlegear slots are convenient for holding weapons","Taking lava without gloves hurts!","Watch out, food loses saturation","Loot Games give helpful rewards","Using too many translocators can cause TPS lag","Be sure to check out what you can do with mouse tweaks","Protect your machines from rain","Build multiblocks within the same chunk","You will lose your first piece of aluminium dust in the EBF","Shift-right click with a wrench makes a fluid pipe input-only","The bending machine makes plates more efficiently","Some multiblocks can share walls","You can not use the front side of machines","Disable a machine with a soft mallet if it can not finish a recipe","Forestry worktables are a must!","Try the midnight theme for the quests menu","Try the realistic sky resourcepack","Literally flint and steel","Tinker's tools can levelup","Farm Glowflowers for glowstone","Making steel armour? Check out the composite chestplate","Adventurer's backpack? Did you mean integrated crafting grid, bed and fluid storage?","Beware of cable power loss","Machines that get a higher voltage than they can handle explode","Loss on uninsulated cables is twice as big as on insulated ones","Machines require electricity based on the recipe that's being run, not the tier of the machine or anything else","Machines have an internal buffer and the machine draws power from this buffer, not directly from a generator","Tinker's faucets can pour fluids and also gasses into containers","Beware of pollution!","Found a bug? Report it on GitHub","Tinker's smeltery does not double ores","Be sure to check out the wiki","Perditio and vanadiumsteel picks and hammers are really fast","Look for ore chunks","Nerfs incoming!","You can plant oreberries on cropsticks","IC2 Crops can receive bonus environmental statistics based on biome","Weeds spread to empty crop sticks and destroy other crops"};
     private String tipsColor = "ffffff";
     private boolean tipsTextShadow = true;
     private int tipsChangeFrequency = 50;
@@ -104,7 +107,7 @@ public class MinecraftDisplayer implements IDisplayer {
     public static int blendCounter = 0;
     private static String newBlendImage = "none";
     private static int nonStaticElementsToGo;
-    private Logger log;
+    private static Logger log = LogManager.getLogger("betterloadingscreen");
 
     CountDownLatch countDownLatch = new CountDownLatch(1);
     
@@ -237,6 +240,9 @@ public class MinecraftDisplayer implements IDisplayer {
     }
     
     public String randomBackground(String currentBG) {
+        if (randomBackgroundArray.length == 1){
+            return randomBackgroundArray[0];
+        }
     	System.out.println("currentBG is: "+currentBG);
     	Random rand = new Random();
     	String res = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
@@ -255,6 +261,9 @@ public class MinecraftDisplayer implements IDisplayer {
     }
 
     public String randomTooltip(String currentTooltip) {
+        if (randomTips.length == 1){
+            return randomTips[0];
+        }
         System.out.println("currentTooltip is: " + currentTooltip);
         Random rand = new Random();
         String res = randomTips[rand.nextInt(randomTips.length)];
@@ -271,7 +280,117 @@ public class MinecraftDisplayer implements IDisplayer {
         System.out.println("res is: "+res);
         return res;
     }
-    
+
+    public static String[] readTipsFile(String file) throws IOException {
+        BufferedReader reader = null;
+        List<String> lines = new ArrayList<>();
+        try {
+            reader = new BufferedReader(new FileReader(file));
+            StringBuffer inputBuffer = new StringBuffer();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.charAt(0) != '#') {
+                    lines.add(line);
+                }
+                inputBuffer.append(line);
+                inputBuffer.append('\n');
+            }
+            if (lines.size() == 0) {
+                lines.add("No tips!");
+            }
+            reader.close();
+
+            FileOutputStream fileOut = new FileOutputStream(file);
+            fileOut.write(inputBuffer.toString().getBytes());
+            fileOut.close();
+        }
+        catch (FileNotFoundException e) {
+            log.warn("Error while opening tips file");
+        }
+        return lines.toArray(new String[0]);
+    }
+
+    public static void placeTipsFile() throws  IOException {
+        String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+        System.out.println("getting resource");
+        //InputStream fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/tips.txt")).getInputStream();
+        InputStream fileContents = null;
+        try {
+            fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/" + locale + ".txt")).getInputStream();
+        } catch (Exception e) {
+            fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/en_US.txt")).getInputStream();
+            locale = "en_US";
+            System.out.println("Language not found");
+        }
+        byte[] buffer = new byte[fileContents.available()];
+        fileContents.read(buffer);
+        System.out.println("got resource?");
+        File dir = new File("./config/Betterloadingscreen/tips");
+        if (!dir.exists()){
+            System.out.println("dir does not exist");
+            dir.mkdirs();
+        } else {
+            System.out.println("dir exists");
+        }
+        System.out.println("Current locale: "+locale);
+        File dest = new File("./config/Betterloadingscreen/tips/" + locale + ".txt");
+        System.out.println("dest set");
+        OutputStream outStream = new FileOutputStream(dest);
+        System.out.println("outputstream set");
+        outStream.write(buffer);
+        System.out.println("buffer write");
+        /*try {
+            FileUtils.copyDirectory(source, dest);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+    }
+
+    public void handleTips() {
+        //tips
+        System.out.println("hmm1");
+        String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+        System.out.println("Language is: "+locale);
+        File tipsCheck = new File("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+        System.out.println("hmm2");
+        if (tipsCheck.exists()) {
+            try {
+                System.out.println("hmm3");
+                randomTips = readTipsFile("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+                Random rand = new Random();
+                tip = randomTips[rand.nextInt(randomTips.length)];
+                System.out.println("choosing first tip: "+tip);
+                System.out.println("hmm4");
+            } catch (IOException e) {
+                System.out.println("hmm5");
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("hmm6");
+            try {
+                tipsCheck = new File("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+                System.out.println("Checking if "+locale+".txt exists");
+                if (tipsCheck.exists()) {
+                    System.out.println("File exists");
+                    randomTips = readTipsFile("./config/BetterLoadingScreen/" + locale + ".txt");
+                } else {
+                    tipsCheck = new File("./config/BetterLoadingScreen/tips/en_US.txt");
+                    if (!tipsCheck.exists()){
+                        System.out.println("Placing tips");
+                        placeTipsFile();
+                    }
+                    randomTips = readTipsFile("./config/BetterLoadingScreen/tips/en_US.txt");
+                }
+                Random rand = new Random();
+                tip = randomTips[rand.nextInt(randomTips.length)];
+                System.out.println("choosing first tip: "+tip);
+            } catch (IOException e) {
+                System.out.println("hmm7");
+                e.printStackTrace();
+            }
+        }
+    }
+
     // Minecraft's display hasn't been created yet, so don't bother trying
     // to do anything now
     @Override
@@ -279,7 +398,8 @@ public class MinecraftDisplayer implements IDisplayer {
         mc = Minecraft.getMinecraft();
         String n = System.lineSeparator();
         // Open the normal config
-        /*String commentBruh = "bruh"+ "\n";
+        /*How configs work:
+        String commentBruh = "bruh"+ "\n";
         String bruh = cfg.getString("bruhissimo", "general", "false", commentBruh);
         System.out.println("Brih is: "+bruh);*/
         
@@ -359,6 +479,9 @@ public class MinecraftDisplayer implements IDisplayer {
         		"The animation runs on the main thread (because OpenGL bruh momento), so setting this higher than"+n+
         		"default is not recommended (basically: if image transition running, your mods not loading)";
         threadSleepTime = cfg.getInt("threadSleepTime", "changing background", threadSleepTime, 0, 9000, comment25);
+        /*
+        NOBODY EXPECTS THE SPANISH INQUISITION!
+         */
         String comment26 = "Each magic amount of time, the DisplayProgress CLS function is called. You have a chance then (if nothing is registering its materials tho)"+ n +
         		"to change the background. But not so fast, this function gets called pretty often so I choose to change my background"+ n +
         		"each "+String.valueOf(changeFrequency)+"th call of the function. Don't waste the main thread too much, be like me.";
@@ -380,10 +503,8 @@ public class MinecraftDisplayer implements IDisplayer {
         imgurGalleryLink = cfg.getString("imgurGalleryLink", "imgur", imgurGalleryLink, comment31);
 
         //tips
-        String comment32 = "Set to true if you want to display random tips";
+        String comment32 = "Set to true if you want to display random tips. Tips are stored in a separate file";
         tipsEnabled = cfg.getBoolean("tipsEnabled", "tips", tipsEnabled, comment32);
-        String comment33 = "List of tips to display randomly from. Use same formatting as for background list";
-        randomTips = parseBackgroundCFGListToArray((cfg.getString("tipsList", "tips", parseBackgroundArraytoCFGList(randomTips), comment33)));
         String comment34 = "Base text position. Can be TOP_CENTER, TOP_RIGHT, CENTER_LEFT, CENTER, CENTER_RIGHT, BOTTOM_LEFT, BOTTOM_CENTER or BOTTOM_RIGHT." + n
                 + "Note: Other elements use CENTER, if you really need, ask to implement this base poition option for any other element.";
         baseTipsTextPos = cfg.getString("baseTipsTextPos", "tips", baseTipsTextPos, comment34);
@@ -414,16 +535,6 @@ public class MinecraftDisplayer implements IDisplayer {
             }
         }*/
         
-
-
-        if (randomBackgrounds && !salt) {
-            System.out.println("choosing first random bg");
-        	Random rand = new Random();
-			background = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
-			tip = randomTips[rand.nextInt(randomTips.length)];
-            System.out.println("choosing first tip: "+tip);
-		}
-        
         if (salt) {
         	blendingEnabled = false;
         }
@@ -438,6 +549,15 @@ public class MinecraftDisplayer implements IDisplayer {
 
             mc.refreshResources();
         }
+
+        handleTips();
+
+        if (randomBackgrounds && !salt) {
+            System.out.println("choosing first random bg");
+            Random rand = new Random();
+            background = randomBackgroundArray[rand.nextInt(randomBackgroundArray.length)];
+        }
+
         // Open the special config directory
         //File configDir = new File("./config/BetterLoadingScreen");
         File configDir = new File("./config");
@@ -459,13 +579,17 @@ public class MinecraftDisplayer implements IDisplayer {
 			    	alexiil.mods.load.MinecraftDisplayer.blendingJustSet = true;
 			    	alexiil.mods.load.MinecraftDisplayer.blendAlpha = 1;
     			}
-    			if (tipsEnabled && ((!isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials && tipCounter > tipsChangeFrequency) || ((isRegisteringBartWorks || isRegisteringGTmaterials || isReplacingVanillaMaterials) && tipCounter > tipsChangeFrequency*secondBarToolTipMultiplier))) {
+    			/*if (tipsEnabled && ((!isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials && tipCounter > tipsChangeFrequency) || ((isRegisteringBartWorks || isRegisteringGTmaterials || isReplacingVanillaMaterials) && tipCounter > tipsChangeFrequency*secondBarToolTipMultiplier))) {
                     tipCounter = 0;
                     tip = randomTooltip(tip);
-                }
+                }*/
     		}
     	}
     	if (!salt) {
+            if (tipsEnabled && ((!isRegisteringBartWorks && !isRegisteringGTmaterials && !isReplacingVanillaMaterials && tipCounter > tipsChangeFrequency) || ((isRegisteringBartWorks || isRegisteringGTmaterials || isReplacingVanillaMaterials) && tipCounter > tipsChangeFrequency*secondBarToolTipMultiplier))) {
+                tipCounter = 0;
+                tip = randomTooltip(tip);
+            }
 	    	if (alexiil.mods.load.MinecraftDisplayer.isRegisteringGTmaterials || isReplacingVanillaMaterials || isRegisteringBartWorks) {
 	    		if (!tipsEnabled) {
                     images = new ImageRender[11];
@@ -501,7 +625,7 @@ public class MinecraftDisplayer implements IDisplayer {
                     images[10] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
                 } else {
                     //For the position, BOTTOM_LEFT gives something nice with these coords: {0, -80};
-                    images[10] = new ImageRender(fontTexture, EPosition.BOTTOM_CENTER, EType.TIPS_TEXT, null, new Area(tipsTextPos[0], tipsTextPos[0], 0, 0), "000000", tip, "");
+                    images[10] = new ImageRender(fontTexture, EPosition.valueOf(baseTipsTextPos), EType.TIPS_TEXT, null, new Area(tipsTextPos[0], tipsTextPos[1], 0, 0), "000000", tip, "");
                     images[11] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
                 }
 	            //
@@ -530,7 +654,7 @@ public class MinecraftDisplayer implements IDisplayer {
                 if (!tipsEnabled) {
                     images[6] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
                 } else {
-                    images[6] = new ImageRender(fontTexture, EPosition.BOTTOM_CENTER, EType.TIPS_TEXT, null, new Area(tipsTextPos[0], tipsTextPos[1], 0, 0), "000000", tip, "");
+                    images[6] = new ImageRender(fontTexture, EPosition.valueOf(baseTipsTextPos), EType.TIPS_TEXT, null, new Area(tipsTextPos[0], tipsTextPos[1], 0, 0), tipsColor, tip, "");
                     images[7] = new ImageRender(null, null, EType.CLEAR_COLOUR, null, null, "ffffff", null, "");
                 }
 	    	}
@@ -673,6 +797,7 @@ public class MinecraftDisplayer implements IDisplayer {
                 FontRenderer font = fontRenderer(render.resourceLocation);
                 int width = font.getStringWidth(render.text);
                 int startX1 = render.positionType.transformX(render.position.x, resolution.getScaledWidth() - width);
+                //System.out.println("startX1 normal: "+startX1);
                 int startY1 = render.positionType.transformY(render.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
                 if (tipsTextShadow) {
                     font.drawStringWithShadow(render.text, startX1, startY1, Integer.parseInt(tipsColor, 16));
@@ -745,7 +870,7 @@ public class MinecraftDisplayer implements IDisplayer {
                     drawRect(startX, startY,PWidth, PHeight, render3.texture.x, render3.texture.y, render3.texture.width, render3.texture.height);
                     //
                     
-                  //loading bar animated
+                    //loading bar animated
                     GL11.glColor4f(render.getRed(), render.getGreen(), render.getBlue(), 1F);
                     ImageRender render4 = new ImageRender(images[5].resourceLocation, images[5].positionType, images[5].type, images[5].texture, images[5].position);
                     //startX = progressPos[0];//render3.transformX(resolution.getScaledWidth());
@@ -771,6 +896,7 @@ public class MinecraftDisplayer implements IDisplayer {
                     ImageRender render5 = new ImageRender(images[2].resourceLocation, images[2].positionType, images[2].type, images[2].texture, images[2].position);
                     FontRenderer font = fontRenderer(render5.resourceLocation);
                     int width = font.getStringWidth(text);
+                    //System.out.println("width1 is: "+String.valueOf(width));
                     startX = render5.positionType.transformX(render5.position.x, resolution.getScaledWidth() - width);
                     startY = render5.positionType.transformY(render5.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
                     if (textShadow) {
@@ -791,8 +917,22 @@ public class MinecraftDisplayer implements IDisplayer {
     				} else {
     					drawString(font, percentage, startX, startY, intColor);
     				}
+                    //tips. bruh that is so badly written, pls don't blame me, modding feels like swimming in concrete
+                    ImageRender render7 = null;
+                    render7 = new ImageRender(fontTexture, EPosition.BOTTOM_CENTER, EType.TIPS_TEXT, null, new Area(tipsTextPos[0], tipsTextPos[1], 0, 0), tipsColor, tip, "");
+                    font = fontRenderer(render7.resourceLocation);
+                    width = font.getStringWidth(render7.text);
+                    //System.out.println("width2 is: "+String.valueOf(width));
+                    int startX1 = render7.positionType.transformX(render7.position.x, resolution.getScaledWidth() - width);
+                    //System.out.println("startX1 blending: "+startX1);
+                    int startY1 = render7.positionType.transformY(render7.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
+                    if (tipsTextShadow) {
+                        font.drawStringWithShadow(render7.text, startX1, startY1, Integer.parseInt(tipsColor, 16));
+                    } else {
+                        drawString(font, render7.text, startX1, startY1, Integer.parseInt(tipsColor, 16));
+                    }
+
                     //
-                    
                     postDisplayScreen();
                     drawImageRender(render, text, percent);
             		break;
