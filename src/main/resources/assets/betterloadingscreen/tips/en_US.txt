@@ -6,7 +6,7 @@
 #Adventurer's backpack? Did you mean integrated crafting grid, bed and fluid
 #
 Infinite water sources are disabled
-Got a question? Join our Discord server
+Got a question? Join our Discord server: discord.com/invite/EXshrPV
 Don't give ideas to 0lafe
 Don't feed your machines after midnight
 Make sure you have installed a backup mod
@@ -29,8 +29,8 @@ Build multiblocks within the same chunk
 You will lose your first piece of aluminium dust in the EBF
 Shift-right click with a wrench makes a fluid pipe input-only
 The bending machine makes plates more efficiently
-Some multiblocks can share walls
-You can not use the front side of machines
+Multiblocks can share walls
+You can't use the front side of machines
 Disable a machine with a soft mallet if it can not finish a recipe
 Forestry worktables are a must!
 Try the midnight theme for the quests menu
@@ -49,7 +49,7 @@ Tinker's faucets can pour fluids and also gasses into containers
 Beware of pollution!
 Found a bug? Report it on GitHub
 Tinker's smeltery does not double ores
-Be sure to check out the wiki
+Be sure to check out the wiki: gtnh.miraheze.org
 Perditio and vanadiumsteel picks and hammers are really fast
 Look for ore chunks
 Nerfs incoming!
@@ -105,12 +105,13 @@ Remember to check if there are Natura clouds when you launch a rocket!
 Abandon all vanilla knowledge all ye who enter here
 With the power of Duct Tape, I solved all of your maintenance problems!
 When you open a Twilight Portal, you'll get hit by lightning
-Sometimes it's better to flee than fight some mobs
-You can power machines by putting a battery in their Energy slot
+#Sometimes it's better to flee than fight some mobs
+Sometimes the best combat strategy is "Nigerundayooo!"
+You can power machines by putting a battery in their energy slot
 You can charge your jetpack by putting it in the Energy slot of LV machines
 Be prepared to take hours to craft a single machine!
 Oil + Thunder = Fire. Remember to put cobblestone over your oil wells!
-Nuclear Reactor configs give 20x the energy they give in IC2!
+Nuclear Reactor configs give 10x the energy they give in IC2!
 Remember to plant cotton - you'll need a ton of it
 It's aluminIum, not aluminum
 Sometimes it's better to buy than to craft
@@ -123,3 +124,13 @@ Meta-Tip! You can see the list of loading screen tips in the config
 Hahahaha, coin quests go brrrrrrr
 If you're making a Project Red system, make sure to use a wall of drawers!
 How many circuits have you crafted in your life?
+JOURNEYMAP: PRESS[j]
+Not by Vazkii
+sqrt(-1) loves you!
+(MultiMC > Curse) && (Technic > Curse): true
+All you had to do was tho follow the damn quest line, CJ!
+Click on an item in the quest book to show its recipe in NEI
+Why not visit GregTech? We have... microcrafting
+Cables are | || || |_ y
+Varying foods gives hearts!
+You can change InGame Info XML scale in ingame configs

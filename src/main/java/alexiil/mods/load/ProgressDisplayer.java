@@ -170,7 +170,7 @@ public class ProgressDisplayer {
 
         connectExternally = cfg.getBoolean("connectExternally", "general", false, "If this is true, it will conect to drone.io to get a changelog." + n + "Note: this repo is down.");
 
-        playSound = cfg.getBoolean("playSound", "general", false, "Play a sound after minecraft has finished starting up");
+        playSound = cfg.getBoolean("playSound", "general", true, "Play a sound after minecraft has finished starting up");
 
         if (useMinecraft)
             displayer = new MinecraftDisplayerWrapper();
