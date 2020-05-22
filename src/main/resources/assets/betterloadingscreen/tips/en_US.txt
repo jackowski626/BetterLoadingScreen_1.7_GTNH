@@ -1,7 +1,7 @@
 #Tips for the loading screen
-#Thanks to boubou19, chochem, interestingusernam3, glowredman, GTNH-Afx237v7, leagris, Nvidiot, Regian24, yukieiji and others for tip suggestions
+#Thanks to 0lafe, boubou19, chochem, interestingusernam3, glowredman, GTNH-Afx237v7, leagris, Nvidiot, Regian24, richardhendricks, yukieiji and others for tip suggestions
 #
-#Maximal characters for a tip: 77
+#Maximal characters for a tip: 77 (more can go out of the screen)
 #The line below, including the "#" are 77 chars
 #Adventurer's backpack? Did you mean integrated crafting grid, bed and fluid
 #
@@ -134,3 +134,9 @@ Why not visit GregTech? We have... microcrafting
 Cables are | || || |_ y
 Varying foods gives hearts!
 You can change InGame Info XML scale in ingame configs
+Look for sulfur in the Nether
+Game mechanics datasheet: bit.ly/gtnh-datasheets
+If it's too tedious you're doing it wrong
+Do you also watch your oven while baking food?
+There's always something else you can do while waiting
+Use F3 + S to reload the sound if it's gone
