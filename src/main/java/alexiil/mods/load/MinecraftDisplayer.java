@@ -82,6 +82,8 @@ public class MinecraftDisplayer implements IDisplayer {
     private boolean tipsTextShadow = true;
     private int tipsChangeFrequency = 18;
     private String tip = "";
+    private static boolean useCustomTips = false;
+    private static String customTipFilename = "en_US";
     private boolean textShadow = true;
     private String textColor = "ffffff";
     private boolean randomBackgrounds  = true;
@@ -315,9 +317,16 @@ public class MinecraftDisplayer implements IDisplayer {
     }
 
     public static void placeTipsFile() throws  IOException {
-        String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
-        if (locale.length() > 4) {
-            locale = locale.substring(0, 4);
+        String locale = "en_US";
+        if (!useCustomTips) {
+            log.info("Not using custom tooltips");
+            locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+            if (locale.length() > 4) {
+                locale = locale.substring(0, 4);
+            }
+        } else {
+            locale = customTipFilename;
+            log.info("Using custom tooltips, name: " + locale);
         }
         //System.out.println("getting resource");
         //InputStream fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/tips.txt")).getInputStream();
@@ -349,14 +358,21 @@ public class MinecraftDisplayer implements IDisplayer {
     }
 
     public void handleTips() {
-        //tips
-        String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
-        if (locale.length() > 4) {
-            locale = locale.substring(0, 4);
+        String locale = "en_US";
+        if (!useCustomTips) {
+            log.info("Not using custom tooltips");
+            locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+            if (locale.length() > 4) {
+                locale = locale.substring(0, 4);
+            }
+        } else {
+            locale = customTipFilename;
+            log.info("Using custom tooltips, name: " + locale);
         }
         //System.out.println("Language is: "+locale);
         File tipsCheck = new File("./config/Betterloadingscreen/tips/" + locale + ".txt");
         if (tipsCheck.exists()) {
+            log.info("Tips file exists");
             try {
                 //System.out.println("hmm3");
                 randomTips = readTipsFile("./config/Betterloadingscreen/tips/" + locale + ".txt");
@@ -550,6 +566,11 @@ public class MinecraftDisplayer implements IDisplayer {
         tipsColor = cfg.getString("tipsTextColor", "tips", tipsColor, comment37);
         String comment38 = "Time in seconds between tip change";
         tipsChangeFrequency = cfg.getInt("tipsChangeFrequency", "tips", tipsChangeFrequency, 1, 9000, comment38);
+        String comment41 = "Set to true if you want a custom tips file/different locale than your Minecraft one.";
+        useCustomTips = cfg.getBoolean("useCustomTips", "tips", useCustomTips, comment41);
+        String comment42 = "Custom tips file name, place it in config/Betterloadingscreen/tips. " + n +
+                "Don't include the \".txt\". Example: \"myTipFile\"";
+        customTipFilename = cfg.getString("customTipFilename", "tips", customTipFilename, comment42);
 
         try {
             lbRGB[0] = (float)(Color.decode("#" + loadingBarsColor).getRed() & 255) / 255.0f;//Color.decode("#" + loadingBarsColor).getRed();
