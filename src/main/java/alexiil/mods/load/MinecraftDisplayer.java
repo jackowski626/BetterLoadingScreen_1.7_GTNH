@@ -118,6 +118,8 @@ public class MinecraftDisplayer implements IDisplayer {
     private boolean scheduledBackgroundExecSet = false;
 
     CountDownLatch countDownLatch = new CountDownLatch(1);
+
+    private boolean experimental = false;
     
     public static float getLastPercent() {
     	return lastPercent;
@@ -307,12 +309,16 @@ public class MinecraftDisplayer implements IDisplayer {
         }
         catch (FileNotFoundException e) {
             log.warn("Error while opening tips file");
+            return new String[] {"Failed to load tips! If you didn't do anything, yell at jackowski626#0522"};
         }
         return lines.toArray(new String[0]);
     }
 
     public static void placeTipsFile() throws  IOException {
         String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+        if (locale.length() > 4) {
+            locale = locale.substring(0, 4);
+        }
         //System.out.println("getting resource");
         //InputStream fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/tips.txt")).getInputStream();
         InputStream fileContents = null;
@@ -321,21 +327,21 @@ public class MinecraftDisplayer implements IDisplayer {
         } catch (Exception e) {
             fileContents = Minecraft.getMinecraft().getResourceManager().getResource(new ResourceLocation("betterloadingscreen:tips/en_US.txt")).getInputStream();
             locale = "en_US";
-            //System.out.println("Language not found");
+            log.info("Language not found");
         }
         byte[] buffer = new byte[fileContents.available()];
         fileContents.read(buffer);
         //System.out.println("got resource?");
         File dir = new File("./config/Betterloadingscreen/tips");
         if (!dir.exists()){
-            //System.out.println("dir does not exist");
+            log.info("tips dir does not exist");
             dir.mkdirs();
         } else {
-            //System.out.println("dir exists");
+            log.info("tips dir exists");
         }
-        //System.out.println("Current locale: "+locale);
+        log.info("Current locale: "+locale);
         File dest = new File("./config/Betterloadingscreen/tips/" + locale + ".txt");
-        System.out.println("dest set");
+        log.info("dest set");
         OutputStream outStream = new FileOutputStream(dest);
         //System.out.println("outputstream set");
         outStream.write(buffer);
@@ -345,12 +351,15 @@ public class MinecraftDisplayer implements IDisplayer {
     public void handleTips() {
         //tips
         String locale = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage().getLanguageCode();
+        if (locale.length() > 4) {
+            locale = locale.substring(0, 4);
+        }
         //System.out.println("Language is: "+locale);
-        File tipsCheck = new File("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+        File tipsCheck = new File("./config/Betterloadingscreen/tips/" + locale + ".txt");
         if (tipsCheck.exists()) {
             try {
-                System.out.println("hmm3");
-                randomTips = readTipsFile("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+                //System.out.println("hmm3");
+                randomTips = readTipsFile("./config/Betterloadingscreen/tips/" + locale + ".txt");
                 Random rand = new Random();
                 tip = randomTips[rand.nextInt(randomTips.length)];
                 //System.out.println("choosing first tip: "+tip);
@@ -377,18 +386,18 @@ public class MinecraftDisplayer implements IDisplayer {
         } else {
             //System.out.println("hmm6");
             try {
-                tipsCheck = new File("./config/BetterLoadingScreen/tips/" + locale + ".txt");
+                tipsCheck = new File("./config/Betterloadingscreen/tips/" + locale + ".txt");
                 //System.out.println("Checking if "+locale+".txt exists");
                 if (tipsCheck.exists()) {
                     //System.out.println("File exists");
-                    randomTips = readTipsFile("./config/BetterLoadingScreen/" + locale + ".txt");
+                    randomTips = readTipsFile("./config/Betterloadingscreen/" + locale + ".txt");
                 } else {
-                    tipsCheck = new File("./config/BetterLoadingScreen/tips/en_US.txt");
+                    tipsCheck = new File("./config/Betterloadingscreen/tips/en_US.txt");
                     if (!tipsCheck.exists()){
                         //System.out.println("Placing tips");
                         placeTipsFile();
                     }
-                    randomTips = readTipsFile("./config/BetterLoadingScreen/tips/en_US.txt");
+                    randomTips = readTipsFile("./config/Betterloadingscreen/tips/en_US.txt");
                 }
                 Random rand = new Random();
                 tip = randomTips[rand.nextInt(randomTips.length)];
@@ -608,7 +617,7 @@ public class MinecraftDisplayer implements IDisplayer {
         }
 
         // Open the special config directory
-        //File configDir = new File("./config/BetterLoadingScreen");
+        //File configDir = new File("./config/Betterloadingscreen");
         File configDir = new File("./config");
         /*if (!configDir.exists()) {
             configDir.mkdirs();
@@ -816,16 +825,28 @@ public class MinecraftDisplayer implements IDisplayer {
                 int width = font.getStringWidth(text);
                 startX = render.positionType.transformX(render.position.x, resolution.getScaledWidth() - width);
                 startY = render.positionType.transformY(render.position.y, resolution.getScaledHeight() - font.FONT_HEIGHT);
-                /*int currentX = startX; //This allows to draw each char separately.
-                for (int i = 0; i < text.length(); i++) {
-                	//drawString(font., String.valueOf(text.charAt(i)), currentX, startY, render.getColour());
-                	drawString(font, String.valueOf(text.charAt(i)), currentX, startY, render.getColour());
-                	currentX += font.getCharWidth(text.charAt(i));
-                }*/
-                if (textShadow) {
-                	font.drawStringWithShadow(text, startX, startY, intColor);
-                } else {
-                	drawString(font, text, startX, startY, intColor);
+                ////////////////
+                //This allows to draw each char separately.
+                if (experimental) {
+                    int currentX = startX;
+                    for (int i = 0; i < text.length(); i++) {
+                        //drawString(font., String.valueOf(text.charAt(i)), currentX, startY, intColor);
+                        double scale = 2;
+                        log.info("currentX before scale: " + currentX);
+                        GL11.glScaled(scale, scale, scale);
+                        log.info("currentX after scale: " + currentX);
+                        drawString(font, String.valueOf(text.charAt(i)), (int) (currentX / scale), (int) (startY / scale), /*intColor*/0);
+                        GL11.glScaled(1, 1, 1);
+                        currentX += font.getCharWidth(text.charAt(i));
+                    }
+                }
+                ///////////////
+                else {
+                    if (textShadow) {
+                        font.drawStringWithShadow(text, startX, startY, intColor);
+                    } else {
+                        drawString(font, text, startX, startY, intColor);
+                    }
                 }
                 break;
             }
