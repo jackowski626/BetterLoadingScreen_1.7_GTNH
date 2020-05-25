@@ -67,7 +67,7 @@ Ten first Voltage tiers are fully implemented
 Shift-click with a GT-Block on a cable/pipe/etc to auto-connect it
 Read the quest book, it explains many mechanics
 You can bookmark items with NEI ("a" by default)
-It’s NEI, not JEI. Use it frequently.
+It's NEI, not JEI. Use it frequently.
 Your pick is not ready
 Put the "Mine" back in Minecraft
 This pack is pushing my mental capacity - thcv
