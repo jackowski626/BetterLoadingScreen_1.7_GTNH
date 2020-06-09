@@ -39,7 +39,7 @@ import net.minecraftforge.common.config.Configuration;
 
 public class MinecraftDisplayer implements IDisplayer {
     private static String sound;
-    private static String defaultSound = "random.levelup";
+    private static String defaultSound = "betterloadingscreen:rhapsodia_orb";//"random.levelup";
     private static String fontTexture;
     private static String defaultFontTexture = "textures/font/ascii.png";
     private final boolean preview;
@@ -449,7 +449,8 @@ public class MinecraftDisplayer implements IDisplayer {
         String bruh = cfg.getString("bruhissimo", "general", "false", commentBruh);
         System.out.println("Brih is: "+bruh);*/
         
-        String comment4 = "What sound to play when loading is complete. Default is the level up sound (" + defaultSound + ")";
+        String comment4 = "What sound to play when loading is complete. The default sound comes from a Matmos mod expansion" + n +
+        "Rhapsodia, created by Laurent Lozano";
         sound = cfg.getString("sound", "general", defaultSound, comment4);
 
         comment4 = "What font texture to use? Special Cases:"
