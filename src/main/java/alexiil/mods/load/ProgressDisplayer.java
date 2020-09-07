@@ -29,10 +29,8 @@ public class ProgressDisplayer {
 	private static boolean hasTurnedSplashOff = false;
 	private static boolean forgeSplashWasTrue = false;
     public interface IDisplayer {
-                void open(Configuration cfg);
-
+        void open(Configuration cfg);
         void displayProgress(String text, float percent);
-
         void close();
     }
 
@@ -148,26 +146,29 @@ public class ProgressDisplayer {
                 return Lib.Mod.ID;
             }
         };
-        
-        //As in this fork I get rid of presets by having only one in main cfg, the cfg file goes in cfg root
-        File fileOld = new File("./config/betterloadingscreen.cfg");
+
+        //File fileOld = new File("./config/betterloadingscreen.cfg");
         //File fileNew = new File("./config/BetterLoadingScreen/config.cfg");
+        File fileOld = new File("./config/Betterloadingscreen/betterloadingscreen.cfg");
 
         /*if (fileOld.exists())
             cfg = new Configuration(fileOld);
         else
             cfg = new Configuration(fileNew);*/
+        String n = System.lineSeparator();
         cfg = new Configuration(fileOld);
         
         boolean useMinecraft = isClient();
+
         if (useMinecraft) {
             String comment =
                     "Whether or not to use minecraft's display to show the progress. This looks better, but there is a possibilty of not being ";
-            comment += "compatible, so if you do have any strange crash reports or compatability issues, try setting this to false";
+            comment += "compatible, so if you do have any strange crash reports or compatability issues, try setting this to false" + n +
+            		"Note: IIRC, setting this to false makes the screen black";
             useMinecraft = cfg.getBoolean("useMinecraft", "general", true, comment);
         }
 
-        connectExternally = cfg.getBoolean("connectExternally", "general", true, "If this is true, it will conect to drone.io to get a changelog");
+        connectExternally = cfg.getBoolean("connectExternally", "general", false, "If this is true, it will conect to drone.io to get a changelog." + n + "Note: this repo is down.");
 
         playSound = cfg.getBoolean("playSound", "general", true, "Play a sound after minecraft has finished starting up");
 

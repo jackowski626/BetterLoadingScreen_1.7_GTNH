@@ -22,10 +22,12 @@ public class BaseConfig extends GuiScreen {
     private boolean help = false;
     private int xPosHelp = 0;
     private List<List<String>> helpText;
+    private GuiScreen parent;
     /** Used to determine the button positions across the top */
     protected int totalLength;
 
     public BaseConfig(GuiScreen screen) {
+        parent = screen;
         fontRendererObj = Minecraft.getMinecraft().fontRenderer;
         setupGui();
     }
@@ -38,15 +40,16 @@ public class BaseConfig extends GuiScreen {
 
     protected void setupGui() {
         int width = 0;
-        for (GitHubUser usr : BetterLoadingScreen.getContributors())
-            width = Math.max(width, fontRendererObj.getStringWidth(usr.login));
+        if (ProgressDisplayer.connectExternally) {
+            for (GitHubUser usr : BetterLoadingScreen.getContributors())
+                width = Math.max(width, fontRendererObj.getStringWidth(usr.login));
 
-        contributors = new GitHubUserScrollingList(this, width + 40, this.height, 40, this.height - 40, 10);
-        for (GitHubUser c : BetterLoadingScreen.getContributors())
-            contributors.userList.add(c);
+            contributors = new GitHubUserScrollingList(this, width + 40, this.height, 40, this.height - 40, 10);
+            for (GitHubUser c : BetterLoadingScreen.getContributors())
+                contributors.userList.add(c);
 
-        commits = new CommitScrollingList(this, this.width - width - 80, this.height, 40, this.height - 40, width + 60);
-
+            commits = new CommitScrollingList(this, this.width - width - 80, this.height, 40, this.height - 40, width + 60);
+        }
         int index = 0;
         int maxXPos = Math.min(this.width - xPosHelp, 400);
 
@@ -115,6 +118,7 @@ public class BaseConfig extends GuiScreen {
 
     @Override
     public void initGui() {
+        /*
         String text = Translation.translate("alexiillib.config.button");
         int length = fontRendererObj.getStringWidth(text) + 20;
         totalLength = 10;
@@ -138,13 +142,14 @@ public class BaseConfig extends GuiScreen {
         helpClose = new GuiButton(2, totalLength, 1, length, 20, text);
         helpClose.visible = false;
         buttonList.add(helpClose);
-        totalLength += length;
+        totalLength += length;*/
+        Minecraft.getMinecraft().displayGuiScreen(new ActualConfig(parent));
     }
 
     @Override
     protected void actionPerformed(GuiButton button) {
         if (button.id == 0) {
-            Minecraft.getMinecraft().displayGuiScreen(new ActualConfig(this));
+            Minecraft.getMinecraft().displayGuiScreen(new ActualConfig(parent));
         }
         if (button.id == 1) {
             help = true;
