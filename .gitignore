@@ -11,3 +11,12 @@ BetterLoadingScreen.iml
 BetterLoadingScreen.ipr
 BetterLoadingScreen.iws
 *.bat
+.idea/compiler.xml
+.idea/gradle.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/vcs.xml
+BetterLoadingScreen_1.7_GTNH.iml
+BetterLoadingScreen_1.7_GTNH.ipr
+BetterLoadingScreen_1.7_GTNH.iws
+logs/latest.log
