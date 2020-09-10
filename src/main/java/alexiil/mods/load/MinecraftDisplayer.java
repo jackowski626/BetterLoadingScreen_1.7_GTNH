@@ -40,7 +40,7 @@ import net.minecraftforge.common.config.Configuration;
 
 public class MinecraftDisplayer implements IDisplayer {
     private static String sound;
-    private static String defaultSound = "random.levelup";
+    private static String defaultSound = "betterloadingscreen:rhapsodia_orb";
     private static String fontTexture;
     private static String defaultFontTexture = "textures/font/ascii.png";
     private final boolean preview;
